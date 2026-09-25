@@ -31,11 +31,11 @@ interface DecoderInterface
     /**
      * Decode data into a spatial interface from the strategy's input format.
      *
-     * @param mixed $data the data to decode into a spatial interface
+     * @param string|array<string, mixed>|object $data the data to decode into a spatial interface
      *
      * @return SpatialInterface the decoded spatial interface
      */
-    public function decode(mixed $data): SpatialInterface;
+    public function decode(string|array|object $data): SpatialInterface;
 
     /**
      * Get the current strategy.

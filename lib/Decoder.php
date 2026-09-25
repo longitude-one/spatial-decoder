@@ -37,11 +37,11 @@ class Decoder implements DecoderInterface
     /**
      * Decode a spatial interface from a format specified by the internal adapter.
      *
-     * @param mixed $data The data to decode into a spatial interface
+     * @param string|array<string, mixed>|object $data The data to decode into a spatial interface
      *
      * @return SpatialInterface the decoded spatial interface in the format specified by the strategy
      */
-    public function decode(mixed $data): SpatialInterface
+    public function decode(string|array|object $data): SpatialInterface
     {
         return $this->strategy->decode($data);
     }
