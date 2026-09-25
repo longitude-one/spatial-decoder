@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/13.2/phpunit.xsd"
+            cacheDirectory=".phpunit-cache"
+            displayDetailsOnTestsThatTriggerDeprecations="true"
+            displayDetailsOnTestsThatTriggerNotices="true"
+            displayDetailsOnTestsThatTriggerWarnings="true"
+            displayDetailsOnTestsThatTriggerErrors="true"
+            displayDetailsOnPhpunitDeprecations="true"
+            displayDetailsOnPhpunitNotices="true">
+    <testsuites>
+        <testsuite name="spatial-decoder">
+            <directory>tests/</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory suffix=".php">lib/</directory>
+        </include>
+    </source>
+    <coverage>
+        <report>
+            <clover outputFile=".phpunit-cache/coverage.xml"/>
+            <text outputFile=".phpunit-cache/coverage-results.txt" showOnlySummary="true"/>
+        </report>
+    </coverage>
+</phpunit>
