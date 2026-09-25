@@ -26,7 +26,7 @@ interface DecoderStrategyInterface
     /**
      * Decode data into a spatial object from the strategy's input format.
      *
-     * @param mixed $data the data to decode into a spatial object
+     * @param string|array<string, mixed>|object $data the data to decode into a spatial object
      */
-    public function decode(mixed $data): SpatialInterface;
+    public function decode(string|array|object $data): SpatialInterface;
 }
