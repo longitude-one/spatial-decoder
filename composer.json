@@ -1,0 +1,64 @@
+{
+    "name": "longitude-one/spatial-decoder",
+    "description": "Decode spatial data from various representations into SpatialInterface objects.",
+    "keywords": ["decode", "opengis", "gis", "spatial", "geometry", "geography", "iso-13249", "wkb", "ewkb", "wkt", "ewkt", "geojson", "php"],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alexandre Tranchant",
+            "email": "alexandre.tranchant@gmail.com",
+            "role": "Lead maintainer"
+        }
+    ],
+    "require": {
+        "php": "^8.4",
+        "longitude-one/spatial-types": "0.0.1-alpha.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "LongitudeOne\\SpatialDecoder\\": "lib/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "LongitudeOne\\SpatialDecoder\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "quality": [
+            "quality/php-cs-fixer/vendor/bin/php-cs-fixer fix --config=quality/php-cs-fixer/.php-cs-fixer.php --allow-risky=yes",
+            "quality/php-stan/vendor/bin/phpstan analyse --configuration=quality/php-stan/php-stan.neon lib tests --error-format=table --no-progress --no-interaction --no-ansi --level=9 --memory-limit=256M",
+            "quality/php-mess-detector/vendor/bin/phpmd lib text quality/php-mess-detector/ruleset.xml",
+            "quality/php-mess-detector/vendor/bin/phpmd tests text quality/php-mess-detector/test-ruleset.xml",
+            "quality/php-code-sniffer/vendor/bin/phpcs --standard=quality/php-code-sniffer/phpcs.xml -s"
+        ],
+        "test": "phpunit",
+        "test-local": [
+            "@test",
+            "cat .phpunit-cache/coverage-results.txt"
+        ],
+        "install-quality-tools": [
+            "composer install --working-dir=quality/php-cs-fixer",
+            "composer install --working-dir=quality/php-stan",
+            "composer install --working-dir=quality/php-mess-detector",
+            "composer install --working-dir=quality/php-code-sniffer"
+        ],
+        "upgrade-quality-tools": [
+            "composer update",
+            "composer update --working-dir=quality/php-cs-fixer",
+            "composer update --working-dir=quality/php-stan",
+            "composer update --working-dir=quality/php-mess-detector",
+            "composer update --working-dir=quality/php-code-sniffer"
+        ]
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": false
+    },
+    "prefer-stable": true,
+    "minimum-stability": "dev"
+}
