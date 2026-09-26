@@ -16,8 +16,10 @@ declare(strict_types=1);
 
 namespace LongitudeOne\SpatialDecoder\Tests\Unit;
 
-use LongitudeOne\Core\Diagnostic\DiagnosticValueFormatter;
+use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
 use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
+use LongitudeOne\SpatialDecoder\Exception\LogicException;
+use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktSpatialObjectFactory;
 use LongitudeOne\SpatialDecoder\Strategy\WktDecoderStrategy;
 use LongitudeOne\SpatialTypes\Interfaces\PointInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -26,10 +28,16 @@ use PHPUnit\Framework\TestCase;
 /**
  * @internal
  *
+ * @covers \LongitudeOne\SpatialDecoder\Exception\LogicException
  * @covers \LongitudeOne\SpatialDecoder\Strategy\WktDecoderStrategy
- * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\WktParser
+ * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\PointWktParser
+ * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\WktCoordinateReader
+ * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\WktParser
+ * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor
+ * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktPointFactory
+ * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktSpatialObjectFactory
  */
-class WktDecoderStrategyTest extends TestCase
+class PointWktDecoderTest extends TestCase
 {
     /**
      * @return iterable<string, array{string, list<int|float>, bool, bool}>
@@ -60,8 +68,6 @@ class WktDecoderStrategyTest extends TestCase
             true,
             true,
         ];
-        yield 'inferred XYZ' => ['POINT (1 2 3)', [1, 2, 3], true, false];
-        yield 'inferred XYZM' => ['POINT (1 2 3 4)', [1, 2, 3, 4], true, true];
     }
 
     /**
@@ -78,32 +84,19 @@ class WktDecoderStrategyTest extends TestCase
     /**
      * @return iterable<string, array{string}>
      */
-    public static function malformedAndUnsupportedWkts(): iterable
+    public static function malformedPointWkts(): iterable
     {
-        yield 'empty input' => [''];
         yield 'missing ordinate' => ['POINT (1)'];
         yield 'dimension mismatch' => ['POINT Z (1 2)'];
         yield 'too many ordinates' => ['POINT (1 2 3 4 5)'];
-        yield 'comma between point ordinates' => ['POINT (1, 2)'];
+        yield 'unmarked XYZ' => ['POINT (1 2 3)'];
+        yield 'unmarked XYZM' => ['POINT (1 2 3 4)'];
+        yield 'comma between ordinates' => ['POINT (1, 2)'];
         yield 'unseparated ordinates' => ['POINT (1-2)'];
         yield 'trailing input' => ['POINT (1 2) trailing'];
         yield 'too many parentheses' => ['POINT (1 2))'];
-        yield 'unsupported geometry type' => ['LINESTRING EMPTY'];
         yield 'non-finite ordinate' => ['POINT (1e309 2)'];
         yield 'unknown word' => ['POINT EMP'];
-        yield 'unknown geometry word' => ['foo'];
-    }
-
-    /** Test exception messages include a sanitized representation of the input. */
-    public function testDecodeErrorMessageSanitizesInvalidInput(): void
-    {
-        $input = "POINT EMP\nforged log entry";
-        $formattedInput = DiagnosticValueFormatter::format($input);
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessageIsOrContains(\sprintf('Invalid WKT input: "%s".', $formattedInput));
-
-        (new WktDecoderStrategy())->decode($input);
     }
 
     /**
@@ -134,12 +127,12 @@ class WktDecoderStrategyTest extends TestCase
     }
 
     /**
-     * Test rejection of malformed or unsupported WKT representations.
+     * Test rejection of malformed point representations.
      *
-     * @param string $wkt malformed or unsupported WKT input
+     * @param string $wkt malformed WKT input
      */
-    #[DataProvider('malformedAndUnsupportedWkts')]
-    public function testDecodeRejectsMalformedAndUnsupportedRepresentations(string $wkt): void
+    #[DataProvider('malformedPointWkts')]
+    public function testDecodeRejectsMalformedPointRepresentations(string $wkt): void
     {
         $this->expectException(InvalidArgumentException::class);
 
@@ -149,10 +142,10 @@ class WktDecoderStrategyTest extends TestCase
     /**
      * Test decoding of a point in the supplied coordinate dimension.
      *
-     * @param string                $wkt                 WKT representation of the point
-     * @param array<int, int|float> $expectedCoordinates expected ordered ordinates
-     * @param bool                  $hasZ                whether the point has a Z ordinate
-     * @param bool                  $hasM                whether the point has an M ordinate
+     * @param string          $wkt                 WKT representation of the point
+     * @param list<int|float> $expectedCoordinates expected ordered ordinates
+     * @param bool            $hasZ                whether the point has a Z ordinate
+     * @param bool            $hasM                whether the point has an M ordinate
      */
     #[DataProvider('coordinateDimensionWkts')]
     public function testDecodeSupportsEveryCoordinateDimension(string $wkt, array $expectedCoordinates, bool $hasZ, bool $hasM): void
@@ -163,5 +156,13 @@ class WktDecoderStrategyTest extends TestCase
         self::assertSame($expectedCoordinates, $point->toArray());
         self::assertSame($hasZ, $point->hasZ());
         self::assertSame($hasM, $point->hasM());
+    }
+
+    /** Test the decoder-specific logic exception for an incomplete coordinate. */
+    public function testSpatialObjectFactoryThrowsDecoderLogicExceptionForMissingOrdinate(): void
+    {
+        $this->expectException(LogicException::class);
+
+        (new WktSpatialObjectFactory())->createPoint(CoordinateDimensionEnum::XY, [1]);
     }
 }

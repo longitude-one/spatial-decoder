@@ -16,7 +16,7 @@ declare(strict_types=1);
 
 namespace LongitudeOne\SpatialDecoder\Strategy;
 
-use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktParser;
+use LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\WktParser;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 
 /**
