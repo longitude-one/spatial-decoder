@@ -38,11 +38,14 @@ class WktGeometryDispatchTest extends TestCase
     /**
      * @return iterable<string, array{string}>
      */
-    public static function unsupportedGeometryWkts(): iterable
+    public static function unsupportedWkts(): iterable
     {
         yield 'empty input' => [''];
         yield 'unsupported geometry type' => ['TRIANGLE EMPTY'];
+        yield 'unsupported curved geometry type' => ['CIRCULARSTRING (0 0, 1 1, 2 2)'];
         yield 'unknown geometry word' => ['foo'];
+        yield 'EWKT SRID prefix' => ['SRID=4326;POINT (1 2)'];
+        yield 'unknown punctuation' => ['POINT (1 @ 2)'];
     }
 
     /** Test exception messages include a sanitized representation of the input. */
@@ -58,12 +61,12 @@ class WktGeometryDispatchTest extends TestCase
     }
 
     /**
-     * Test rejection of unsupported top-level geometry types.
+     * Test rejection of unsupported WKT representations.
      *
      * @param string $wkt unsupported WKT input
      */
-    #[DataProvider('unsupportedGeometryWkts')]
-    public function testDecodeRejectsUnsupportedGeometryTypes(string $wkt): void
+    #[DataProvider('unsupportedWkts')]
+    public function testDecodeRejectsUnsupportedWktRepresentations(string $wkt): void
     {
         $this->expectException(InvalidArgumentException::class);
 
