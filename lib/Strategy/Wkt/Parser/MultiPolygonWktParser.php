@@ -17,7 +17,8 @@ declare(strict_types=1);
 namespace LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser;
 
 use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
-use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktSpatialObjectFactory;
+use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktMultiPolygonFactory;
+use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktPolygonFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Lexer;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktCoordinateReader;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor;
@@ -28,36 +29,39 @@ use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
  *
  * @internal
  */
-final class MultiPolygonWktParser
+final class MultiPolygonWktParser implements WktGeometryParserInterface
 {
     private PolygonWktParser $polygonParser;
 
     /**
      * Construct a multi-polygon parser.
      *
-     * @param WktTokenCursor          $cursor           lexer cursor for the WKT input
-     * @param WktCoordinateReader     $coordinateReader reader for coordinate values and dimensions
-     * @param WktSpatialObjectFactory $factory          factory for the decoded multi-polygon
+     * @param WktTokenCursor         $cursor           lexer cursor for the WKT input
+     * @param WktCoordinateReader    $coordinateReader reader for coordinate values and dimensions
+     * @param WktMultiPolygonFactory $factory          factory for the decoded multi-polygon
+     * @param WktPolygonFactory      $polygonFactory   factory for polygon members
      */
     public function __construct(
         private WktTokenCursor $cursor,
         private WktCoordinateReader $coordinateReader,
-        private WktSpatialObjectFactory $factory
+        private WktMultiPolygonFactory $factory,
+        WktPolygonFactory $polygonFactory
     ) {
-        $this->polygonParser = new PolygonWktParser($cursor, $coordinateReader, $factory);
+        $this->polygonParser = new PolygonWktParser($cursor, $coordinateReader, $polygonFactory);
     }
 
     /**
      * Parse a multi-polygon representation.
      *
+     * @param CoordinateDimensionEnum|null $inheritedDimension dimension inherited from a parent collection
+     *
      * @return SpatialInterface the decoded multi-polygon
      */
-    public function parse(): SpatialInterface
+    public function parse(?CoordinateDimensionEnum $inheritedDimension = null): SpatialInterface
     {
-        $dimension = $this->coordinateReader->consumeDimension();
+        $dimension = $this->coordinateReader->consumeDimension($inheritedDimension);
         if ($this->cursor->isNextToken(Lexer::T_EMPTY)) {
             $this->cursor->moveNext();
-            $this->cursor->assertEnd();
 
             return $this->factory->createMultiPolygon($dimension ?? CoordinateDimensionEnum::XY, []);
         }
@@ -75,7 +79,6 @@ final class MultiPolygonWktParser
         } while ($hasNextPolygon);
 
         $this->cursor->expectSymbol(')');
-        $this->cursor->assertEnd();
 
         return $this->factory->createMultiPolygon($dimension ?? CoordinateDimensionEnum::XY, $polygons);
     }

@@ -17,7 +17,7 @@ declare(strict_types=1);
 namespace LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser;
 
 use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
-use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktSpatialObjectFactory;
+use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktLineStringFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Lexer;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktCoordinateReader;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor;
@@ -28,39 +28,39 @@ use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
  *
  * @internal
  */
-final class LineStringWktParser
+final class LineStringWktParser implements WktGeometryParserInterface
 {
     /**
      * Construct a line-string parser.
      *
-     * @param WktTokenCursor          $cursor           lexer cursor for the WKT input
-     * @param WktCoordinateReader     $coordinateReader reader for coordinate values and dimensions
-     * @param WktSpatialObjectFactory $factory          factory for the decoded line string
+     * @param WktTokenCursor       $cursor           lexer cursor for the WKT input
+     * @param WktCoordinateReader  $coordinateReader reader for coordinate values and dimensions
+     * @param WktLineStringFactory $factory          factory for the decoded line string
      */
     public function __construct(
         private WktTokenCursor $cursor,
         private WktCoordinateReader $coordinateReader,
-        private WktSpatialObjectFactory $factory
+        private WktLineStringFactory $factory
     ) {
     }
 
     /**
      * Parse a line-string representation.
      *
+     * @param CoordinateDimensionEnum|null $inheritedDimension dimension inherited from a parent collection
+     *
      * @return SpatialInterface the decoded line string
      */
-    public function parse(): SpatialInterface
+    public function parse(?CoordinateDimensionEnum $inheritedDimension = null): SpatialInterface
     {
-        $dimension = $this->coordinateReader->consumeDimension();
+        $dimension = $this->coordinateReader->consumeDimension($inheritedDimension);
         if ($this->cursor->isNextToken(Lexer::T_EMPTY)) {
             $this->cursor->moveNext();
-            $this->cursor->assertEnd();
 
             return $this->factory->createLineString($dimension ?? CoordinateDimensionEnum::XY, []);
         }
 
         [$dimension, $coordinates] = $this->coordinateReader->consumeCoordinateSequence($dimension);
-        $this->cursor->assertEnd();
 
         return $this->factory->createLineString($dimension, $coordinates);
     }

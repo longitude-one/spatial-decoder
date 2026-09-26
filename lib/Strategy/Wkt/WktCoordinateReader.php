@@ -37,6 +37,18 @@ final class WktCoordinateReader
     }
 
     /**
+     * Read one bare point coordinate and its effective dimension.
+     *
+     * @param CoordinateDimensionEnum|null $dimension declared or inferred dimension
+     *
+     * @return array{CoordinateDimensionEnum, list<float|int>} point dimension and ordinates
+     */
+    public function consumeBarePointCoordinate(?CoordinateDimensionEnum $dimension): array
+    {
+        return $this->resolvePointCoordinate($dimension, $this->consumeOrdinates());
+    }
+
+    /**
      * Read one coordinate sequence and its effective dimension.
      *
      * @param CoordinateDimensionEnum|null $dimension declared or inferred dimension
@@ -75,16 +87,24 @@ final class WktCoordinateReader
     /**
      * Consume an optional coordinate-dimension marker.
      *
+     * @param CoordinateDimensionEnum|null $expectedDimension dimension required by a parent collection
+     *
      * @return CoordinateDimensionEnum|null the declared coordinate dimension
      */
-    public function consumeDimension(): ?CoordinateDimensionEnum
+    public function consumeDimension(?CoordinateDimensionEnum $expectedDimension = null): ?CoordinateDimensionEnum
     {
-        return match ($this->cursor->currentToken()?->type) {
+        $dimension = match ($this->cursor->currentToken()?->type) {
             Lexer::T_Z => $this->consumeDimensionToken(CoordinateDimensionEnum::XYZ),
             Lexer::T_M => $this->consumeDimensionToken(CoordinateDimensionEnum::XYM),
             Lexer::T_ZM => $this->consumeDimensionToken(CoordinateDimensionEnum::XYZM),
-            default => null,
+            default => $expectedDimension,
         };
+
+        if (null !== $expectedDimension && null !== $dimension && $dimension !== $expectedDimension) {
+            throw $this->cursor->createInvalidInputException('Nested WKT geometries must use the collection coordinate dimension.');
+        }
+
+        return $dimension;
     }
 
     /**
@@ -99,13 +119,8 @@ final class WktCoordinateReader
         $this->cursor->expectSymbol('(');
         $ordinates = $this->consumeOrdinates();
         $this->cursor->expectSymbol(')');
-        $dimension ??= $this->dimensionForUnmarkedCoordinate(\count($ordinates));
 
-        if (\count($ordinates) !== $dimension->coordinateDimension()) {
-            throw $this->cursor->createInvalidInputException('The WKT point ordinates do not match its coordinate dimension.');
-        }
-
-        return [$dimension, $ordinates];
+        return $this->resolvePointCoordinate($dimension, $ordinates);
     }
 
     /**
@@ -191,5 +206,23 @@ final class WktCoordinateReader
             2 => CoordinateDimensionEnum::XY,
             default => throw $this->cursor->createInvalidInputException('A WKT coordinate with a non-XY dimension requires an explicit dimension marker.'),
         };
+    }
+
+    /**
+     * Resolve and validate a point coordinate's effective dimension.
+     *
+     * @param CoordinateDimensionEnum|null $dimension declared or inferred dimension
+     * @param list<float|int>              $ordinates point ordinates
+     *
+     * @return array{CoordinateDimensionEnum, list<float|int>} point dimension and ordinates
+     */
+    private function resolvePointCoordinate(?CoordinateDimensionEnum $dimension, array $ordinates): array
+    {
+        $dimension ??= $this->dimensionForUnmarkedCoordinate(\count($ordinates));
+        if (\count($ordinates) !== $dimension->coordinateDimension()) {
+            throw $this->cursor->createInvalidInputException('The WKT point ordinates do not match its coordinate dimension.');
+        }
+
+        return [$dimension, $ordinates];
     }
 }

@@ -30,9 +30,10 @@ use PHPUnit\Framework\TestCase;
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\MultiPolygonWktParser
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\PolygonWktParser
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\WktParser
+ * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\WktParserFactory
+ * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\WktGeometryParserRegistry
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktMultiPolygonFactory
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktPolygonFactory
- * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktSpatialObjectFactory
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\WktCoordinateReader
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor
  */

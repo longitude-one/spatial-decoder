@@ -29,6 +29,8 @@ use PHPUnit\Framework\TestCase;
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\PointWktParser
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\WktCoordinateReader
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\WktParser
+ * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\WktParserFactory
+ * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\WktGeometryParserRegistry
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor
  */
 class WktGeometryDispatchTest extends TestCase

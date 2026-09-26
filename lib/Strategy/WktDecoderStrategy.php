@@ -16,7 +16,7 @@ declare(strict_types=1);
 
 namespace LongitudeOne\SpatialDecoder\Strategy;
 
-use LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\WktParser;
+use LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\WktParserFactory;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 
 /**
@@ -33,6 +33,6 @@ final class WktDecoderStrategy implements StringDecoderStrategyInterface
      */
     public function decode(string $data): SpatialInterface
     {
-        return (new WktParser($data))->parse();
+        return (new WktParserFactory())->create($data)->parse();
     }
 }
