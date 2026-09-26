@@ -77,6 +77,24 @@ class LexerTest extends TestCase
         self::assertSame(['pOiNt', 'zm', 'empty', 'polyhedralsurface', '(', '1', ',', '2', ')', ';', '?'], array_column($tokens, 'value'));
     }
 
+    /** Test normalized floating-point, textual, and empty token values. */
+    public function testValueNormalizesFloatingPointAndReturnsTextValues(): void
+    {
+        $lexer = new Lexer('1.25 pOiNt');
+
+        self::assertTrue($lexer->moveNext());
+        self::assertTrue($lexer->moveNext());
+        self::assertSame('1.25', $lexer->value());
+
+        self::assertFalse($lexer->moveNext());
+        self::assertSame('pOiNt', $lexer->value());
+
+        $emptyLexer = new Lexer('');
+
+        self::assertFalse($emptyLexer->moveNext());
+        self::assertSame('', $emptyLexer->value());
+    }
+
     /** Test normalized values at the native integer boundaries. */
     public function testValuePreservesNativeIntegerBoundaries(): void
     {
