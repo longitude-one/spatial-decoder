@@ -16,7 +16,10 @@ declare(strict_types=1);
 
 namespace LongitudeOne\SpatialDecoder;
 
+use LongitudeOne\SpatialDecoder\Strategy\ArrayDecoderStrategyInterface;
 use LongitudeOne\SpatialDecoder\Strategy\DecoderStrategyInterface;
+use LongitudeOne\SpatialDecoder\Strategy\ObjectDecoderStrategyInterface;
+use LongitudeOne\SpatialDecoder\Strategy\StringDecoderStrategyInterface;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 
 /**
@@ -43,7 +46,19 @@ class Decoder implements DecoderInterface
      */
     public function decode(string|array|object $data): SpatialInterface
     {
-        return $this->strategy->decode($data);
+        if (\is_string($data) && $this->strategy instanceof StringDecoderStrategyInterface) {
+            return $this->strategy->decode($data);
+        }
+
+        if (\is_array($data) && $this->strategy instanceof ArrayDecoderStrategyInterface) {
+            return $this->strategy->decode($data);
+        }
+
+        if (\is_object($data) && $this->strategy instanceof ObjectDecoderStrategyInterface) {
+            return $this->strategy->decode($data);
+        }
+
+        throw new Exception\InvalidArgumentException('The configured strategy does not support the supplied input type.');
     }
 
     /**
