@@ -21,6 +21,7 @@ use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialDecoder\Strategy\ArrayDecoderStrategyInterface;
 use LongitudeOne\SpatialDecoder\Strategy\ObjectDecoderStrategyInterface;
 use LongitudeOne\SpatialDecoder\Strategy\StringDecoderStrategyInterface;
+use LongitudeOne\SpatialDecoder\Strategy\WktDecoderStrategy;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 use PHPUnit\Framework\TestCase;
 
@@ -148,5 +149,13 @@ class DecoderTest extends TestCase
 
         self::assertSame($input, $strategy->receivedInput);
         self::assertSame($decodedSpatial, $result);
+    }
+
+    /** Test decoding WKT through the public decoder API. */
+    public function testDecodeWktThroughPublicApi(): void
+    {
+        $point = (new Decoder(new WktDecoderStrategy()))->decode('POINT ZM (1 2 3 4)');
+
+        self::assertSame([1, 2, 3, 4], $point->toArray());
     }
 }

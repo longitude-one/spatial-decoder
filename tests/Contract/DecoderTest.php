@@ -17,9 +17,8 @@ declare(strict_types=1);
 namespace LongitudeOne\SpatialDecoder\Tests\Contract;
 
 use LongitudeOne\SpatialDecoder\Decoder;
-use LongitudeOne\SpatialDecoder\Strategy\ArrayDecoderStrategyInterface;
-use LongitudeOne\SpatialDecoder\Strategy\DecoderStrategyInterface;
-use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
+use LongitudeOne\SpatialDecoder\Strategy\WktDecoderStrategy;
+use LongitudeOne\SpatialTypes\Interfaces\PointInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -34,19 +33,12 @@ class DecoderTest extends TestCase
      */
     public function testDecodeApiViaConstructor(): void
     {
-        $input = ['encoded' => 'spatial-data'];
-        $decodedSpatial = $this->createStub(SpatialInterface::class);
-        $strategy = $this->createMock(ArrayDecoderStrategyInterface::class);
-        $strategy
-            ->expects($this->once())
-            ->method('decode')
-            ->with($input)
-            ->willReturn($decodedSpatial);
-        $decoder = new Decoder($strategy);
+        $decoder = new Decoder(new WktDecoderStrategy());
 
-        $result = $decoder->decode($input);
+        $result = $decoder->decode('POINT (1 2)');
 
-        self::assertSame($decodedSpatial, $result);
+        self::assertInstanceOf(PointInterface::class, $result);
+        self::assertSame([1, 2], $result->toArray());
     }
 
     /**
@@ -54,23 +46,17 @@ class DecoderTest extends TestCase
      */
     public function testDecodeApiViaSetter(): void
     {
-        $input = ['encoded' => 'spatial-data'];
-        $decodedSpatial = $this->createStub(SpatialInterface::class);
-        $initialStrategy = $this->createStub(DecoderStrategyInterface::class);
-        $strategy = $this->createMock(ArrayDecoderStrategyInterface::class);
-        $strategy
-            ->expects($this->once())
-            ->method('decode')
-            ->with($input)
-            ->willReturn($decodedSpatial);
+        $initialStrategy = new WktDecoderStrategy();
+        $strategy = new WktDecoderStrategy();
         $decoder = new Decoder($initialStrategy);
         self::assertSame($initialStrategy, $decoder->getStrategy());
 
-        $decoder->setStrategy($strategy);
+        self::assertSame($decoder, $decoder->setStrategy($strategy));
         self::assertSame($strategy, $decoder->getStrategy());
 
-        $result = $decoder->decode($input);
+        $result = $decoder->decode('POINT ZM (1 2 3 4)');
 
-        self::assertSame($decodedSpatial, $result);
+        self::assertInstanceOf(PointInterface::class, $result);
+        self::assertSame([1, 2, 3, 4], $result->toArray());
     }
 }
