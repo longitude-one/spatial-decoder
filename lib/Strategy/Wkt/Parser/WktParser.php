@@ -16,9 +16,6 @@ declare(strict_types=1);
 
 namespace LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser;
 
-use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktSpatialObjectFactory;
-use LongitudeOne\SpatialDecoder\Strategy\Wkt\Lexer;
-use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktCoordinateReader;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 
@@ -29,23 +26,14 @@ use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
  */
 final class WktParser
 {
-    private WktCoordinateReader $coordinateReader;
-
-    private WktTokenCursor $cursor;
-
-    private WktSpatialObjectFactory $factory;
-
     /**
-     * Construct a parser for the supplied WKT input.
+     * Construct a root parser over the shared token stream.
      *
-     * @param string $input WKT text to parse
+     * @param WktTokenCursor                       $cursor   lexer cursor for the WKT input
+     * @param WktGeometryParserDispatcherInterface $registry geometry dispatcher for the input
      */
-    public function __construct(string $input)
+    public function __construct(private WktTokenCursor $cursor, private WktGeometryParserDispatcherInterface $registry)
     {
-        $this->cursor = new WktTokenCursor($input);
-        // The coordinate reader consumes the same token stream as the geometry parser.
-        $this->coordinateReader = new WktCoordinateReader($this->cursor);
-        $this->factory = new WktSpatialObjectFactory();
     }
 
     /**
@@ -53,17 +41,9 @@ final class WktParser
      */
     public function parse(): SpatialInterface
     {
-        $geometryType = $this->cursor->currentToken()?->type;
-        $this->cursor->moveNext();
+        $geometry = $this->registry->parseNext(null);
+        $this->cursor->assertEnd();
 
-        // Delegate type-specific syntax while sharing coordinate reading and object creation.
-        return match ($geometryType) {
-            Lexer::T_POINT => (new PointWktParser($this->cursor, $this->coordinateReader, $this->factory))->parse(),
-            Lexer::T_LINESTRING => (new LineStringWktParser($this->cursor, $this->coordinateReader, $this->factory))->parse(),
-            Lexer::T_MULTILINESTRING => (new MultiLineStringWktParser($this->cursor, $this->coordinateReader, $this->factory))->parse(),
-            Lexer::T_POLYGON => (new PolygonWktParser($this->cursor, $this->coordinateReader, $this->factory))->parse(),
-            Lexer::T_MULTIPOLYGON => (new MultiPolygonWktParser($this->cursor, $this->coordinateReader, $this->factory))->parse(),
-            default => throw $this->cursor->createInvalidInputException('The supplied WKT geometry type is not supported.'),
-        };
+        return $geometry;
     }
 }

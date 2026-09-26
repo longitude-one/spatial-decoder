@@ -29,10 +29,11 @@ use PHPUnit\Framework\TestCase;
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\LineStringWktParser
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\WktCoordinateReader
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\WktParser
+ * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\WktParserFactory
+ * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\WktGeometryParserRegistry
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktLineStringFactory
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktPointFactory
- * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktSpatialObjectFactory
  */
 class LineStringWktDecoderTest extends TestCase
 {

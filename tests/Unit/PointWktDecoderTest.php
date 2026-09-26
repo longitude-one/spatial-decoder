@@ -19,7 +19,7 @@ namespace LongitudeOne\SpatialDecoder\Tests\Unit;
 use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
 use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialDecoder\Exception\LogicException;
-use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktSpatialObjectFactory;
+use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktPointFactory;
 use LongitudeOne\SpatialDecoder\Strategy\WktDecoderStrategy;
 use LongitudeOne\SpatialTypes\Interfaces\PointInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -33,9 +33,10 @@ use PHPUnit\Framework\TestCase;
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\PointWktParser
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\WktCoordinateReader
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\WktParser
+ * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\WktParserFactory
+ * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\WktGeometryParserRegistry
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktPointFactory
- * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktSpatialObjectFactory
  */
 class PointWktDecoderTest extends TestCase
 {
@@ -159,10 +160,10 @@ class PointWktDecoderTest extends TestCase
     }
 
     /** Test the decoder-specific logic exception for an incomplete coordinate. */
-    public function testSpatialObjectFactoryThrowsDecoderLogicExceptionForMissingOrdinate(): void
+    public function testPointFactoryThrowsDecoderLogicExceptionForMissingOrdinate(): void
     {
         $this->expectException(LogicException::class);
 
-        (new WktSpatialObjectFactory())->createPoint(CoordinateDimensionEnum::XY, [1]);
+        (new WktPointFactory())->createPoint(CoordinateDimensionEnum::XY, [1]);
     }
 }
