@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace LongitudeOne\SpatialDecoder\Strategy;
 
+use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 
 /**
@@ -27,6 +28,8 @@ interface DecoderStrategyInterface
      * Decode data into a spatial object from the strategy's input format.
      *
      * @param string|array<string, mixed>|object $data the data to decode into a spatial object
+     *
+     * @throws InvalidArgumentException if the data cannot be decoded
      */
     public function decode(string|array|object $data): SpatialInterface;
 }
