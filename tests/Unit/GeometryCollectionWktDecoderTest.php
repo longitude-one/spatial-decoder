@@ -22,7 +22,6 @@ use LongitudeOne\SpatialDecoder\Exception\LogicException;
 use LongitudeOne\SpatialDecoder\Strategy\WktDecoderStrategy;
 use LongitudeOne\SpatialTypes\Interfaces\CollectionInterface;
 use LongitudeOne\SpatialTypes\Interfaces\LineStringInterface;
-use LongitudeOne\SpatialTypes\Interfaces\MultiPointInterface;
 use LongitudeOne\SpatialTypes\Interfaces\PointInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -31,16 +30,14 @@ use PHPUnit\Framework\TestCase;
  * @internal
  *
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\GeometryCollectionWktParser
- * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\MultiPointWktParser
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\WktParser
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\WktParserFactory
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\WktGeometryParserRegistry
- * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktMultiPointFactory
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktGeometryCollectionFactory
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\WktCoordinateReader
  * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor
  */
-class MultiPointAndGeometryCollectionWktDecoderTest extends TestCase
+class GeometryCollectionWktDecoderTest extends TestCase
 {
     /**
      * @return iterable<string, array{string, bool, bool}>
@@ -51,17 +48,6 @@ class MultiPointAndGeometryCollectionWktDecoderTest extends TestCase
         yield 'XYZ' => ['GEOMETRYCOLLECTION Z EMPTY', true, false];
         yield 'XYM' => ['GEOMETRYCOLLECTION M EMPTY', false, true];
         yield 'XYZM' => ['GEOMETRYCOLLECTION ZM EMPTY', true, true];
-    }
-
-    /**
-     * @return iterable<string, array{string, bool, bool}>
-     */
-    public static function emptyMultiPointWkts(): iterable
-    {
-        yield 'XY' => ['MULTIPOINT EMPTY', false, false];
-        yield 'XYZ' => ['MULTIPOINT Z EMPTY', true, false];
-        yield 'XYM' => ['MULTIPOINT M EMPTY', false, true];
-        yield 'XYZM' => ['MULTIPOINT ZM EMPTY', true, true];
     }
 
     /**
@@ -100,33 +86,6 @@ class MultiPointAndGeometryCollectionWktDecoderTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{string}>
-     */
-    public static function malformedMultiPointWkts(): iterable
-    {
-        yield 'empty parentheses' => ['MULTIPOINT ()'];
-        yield 'mixed point-member syntax' => ['MULTIPOINT ((0 1), 2 3)'];
-        yield 'inconsistent dimensions' => ['MULTIPOINT ((0 1), (2 3 4))'];
-        yield 'marked dimension mismatch' => ['MULTIPOINT Z (0 1)'];
-        yield 'trailing comma' => ['MULTIPOINT (0 1,)'];
-        yield 'trailing input' => ['MULTIPOINT EMPTY trailing'];
-    }
-
-    /**
-     * @return iterable<string, array{string, list<list<int|float>>, bool, bool}>
-     */
-    public static function multiPointWkts(): iterable
-    {
-        yield 'XY bare' => ['MULTIPOINT (0 1, 2 3)', [[0, 1], [2, 3]], false, false];
-        yield 'XY parenthesized' => ['MULTIPOINT ((0 1), (2 3))', [[0, 1], [2, 3]], false, false];
-        yield 'XYZ' => ['MULTIPOINT Z ((0 1 2), (3 4 5))', [[0, 1, 2], [3, 4, 5]], true, false];
-        yield 'XYM' => ['MULTIPOINT M (0 1 2, 3 4 5)', [[0, 1, 2], [3, 4, 5]], false, true];
-        yield 'XYZM' => ['MULTIPOINT ZM ((0 1 2 3), (4 5 6 7))', [[0, 1, 2, 3], [4, 5, 6, 7]], true, true];
-        yield 'empty point members' => ['MULTIPOINT (EMPTY, 2 3)', [[], [2, 3]], false, false];
-        yield 'typed empty point members' => ['MULTIPOINT Z (EMPTY, 2 3 4)', [[], [2, 3, 4]], true, false];
-    }
-
-    /**
      * Test preserving dimensions on empty geometry collections.
      *
      * @param string $wkt  WKT representation of an empty geometry collection
@@ -141,24 +100,6 @@ class MultiPointAndGeometryCollectionWktDecoderTest extends TestCase
         self::assertTrue($collection->isEmpty());
         self::assertSame($hasZ, $collection->hasZ());
         self::assertSame($hasM, $collection->hasM());
-    }
-
-    /**
-     * Test preserving dimensions on empty multi-points.
-     *
-     * @param string $wkt  WKT representation of an empty multi-point
-     * @param bool   $hasZ whether the multi-point has a Z ordinate
-     * @param bool   $hasM whether the multi-point has an M ordinate
-     */
-    #[DataProvider('emptyMultiPointWkts')]
-    public function testDecodePreservesEmptyMultiPointDimensions(string $wkt, bool $hasZ, bool $hasM): void
-    {
-        $multiPoint = (new WktDecoderStrategy())->decode($wkt);
-
-        self::assertInstanceOf(MultiPointInterface::class, $multiPoint);
-        self::assertTrue($multiPoint->isEmpty());
-        self::assertSame($hasZ, $multiPoint->hasZ());
-        self::assertSame($hasM, $multiPoint->hasM());
     }
 
     /** Test retaining concrete heterogeneous and nested collection members. */
@@ -187,38 +128,6 @@ class MultiPointAndGeometryCollectionWktDecoderTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
 
         (new WktDecoderStrategy())->decode($wkt);
-    }
-
-    /**
-     * Test rejection of malformed multi-point representations.
-     *
-     * @param string $wkt malformed WKT input
-     */
-    #[DataProvider('malformedMultiPointWkts')]
-    public function testDecodeRejectsMalformedMultiPointRepresentations(string $wkt): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-
-        (new WktDecoderStrategy())->decode($wkt);
-    }
-
-    /**
-     * Test decoding both supported multi-point member syntaxes without losing ordinates.
-     *
-     * @param string                $wkt                 WKT representation of the multi-point
-     * @param list<list<int|float>> $expectedCoordinates expected ordered coordinates
-     * @param bool                  $hasZ                whether the multi-point has a Z ordinate
-     * @param bool                  $hasM                whether the multi-point has an M ordinate
-     */
-    #[DataProvider('multiPointWkts')]
-    public function testDecodeSupportsMultiPointRepresentations(string $wkt, array $expectedCoordinates, bool $hasZ, bool $hasM): void
-    {
-        $multiPoint = (new WktDecoderStrategy())->decode($wkt);
-
-        self::assertInstanceOf(MultiPointInterface::class, $multiPoint);
-        self::assertSame($expectedCoordinates, $multiPoint->toArray());
-        self::assertSame($hasZ, $multiPoint->hasZ());
-        self::assertSame($hasM, $multiPoint->hasM());
     }
 
     /**
