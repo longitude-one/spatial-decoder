@@ -36,10 +36,30 @@ class WktDecoderStrategyTest extends TestCase
      */
     public static function coordinateDimensionWkts(): iterable
     {
-        yield 'XY' => ['POINT (1 2)', [1, 2], false, false];
-        yield 'XYZ' => ['POINT Z (1 -2 3)', [1, -2, 3], true, false];
-        yield 'XYM' => ['POINT M (1 2 3.1)', [1, 2, 3.1], false, true];
-        yield 'XYZM' => ['POINT ZM (1 2 3 4.0)', [1, 2, 3, 4.0], true, true];
+        yield 'XY' => [
+            'POINT (9007199254740991 -0.000000000000000123)',
+            [9007199254740991, -0.000000000000000123],
+            false,
+            false,
+        ];
+        yield 'XYZ' => [
+            'POINT Z (-1.23456789012345 987654321.012345 3.141592653589793)',
+            [-1.23456789012345, 987654321.012345, 3.141592653589793],
+            true,
+            false,
+        ];
+        yield 'XYM' => [
+            'POINT M (1.23456789012345e-10 -987654321.123456 2.718281828459045)',
+            [1.23456789012345e-10, -987654321.123456, 2.718281828459045],
+            false,
+            true,
+        ];
+        yield 'XYZM' => [
+            'POINT ZM (9007199254740991 -0.000000000000000123 1.2345678901234567 4.0e-12)',
+            [9007199254740991, -0.000000000000000123, 1.2345678901234567, 4.0e-12],
+            true,
+            true,
+        ];
         yield 'inferred XYZ' => ['POINT (1 2 3)', [1, 2, 3], true, false];
         yield 'inferred XYZM' => ['POINT (1 2 3 4)', [1, 2, 3, 4], true, true];
     }
