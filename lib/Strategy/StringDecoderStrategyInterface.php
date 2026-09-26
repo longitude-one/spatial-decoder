@@ -16,9 +16,16 @@ declare(strict_types=1);
 
 namespace LongitudeOne\SpatialDecoder\Strategy;
 
-/**
- * Common marker interface for decoder strategies.
- */
-interface DecoderStrategyInterface
+use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
+
+interface StringDecoderStrategyInterface extends DecoderStrategyInterface
 {
+    /**
+     * Decode spatial data from a string.
+     *
+     * @param string $data the data to decode
+     *
+     * @return SpatialInterface the decoded spatial data
+     */
+    public function decode(string $data): SpatialInterface;
 }

@@ -17,6 +17,7 @@ declare(strict_types=1);
 namespace LongitudeOne\SpatialDecoder\Tests\Contract;
 
 use LongitudeOne\SpatialDecoder\Decoder;
+use LongitudeOne\SpatialDecoder\Strategy\ArrayDecoderStrategyInterface;
 use LongitudeOne\SpatialDecoder\Strategy\DecoderStrategyInterface;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 use PHPUnit\Framework\TestCase;
@@ -35,7 +36,7 @@ class DecoderTest extends TestCase
     {
         $input = ['encoded' => 'spatial-data'];
         $decodedSpatial = $this->createStub(SpatialInterface::class);
-        $strategy = $this->createMock(DecoderStrategyInterface::class);
+        $strategy = $this->createMock(ArrayDecoderStrategyInterface::class);
         $strategy
             ->expects($this->once())
             ->method('decode')
@@ -56,7 +57,7 @@ class DecoderTest extends TestCase
         $input = ['encoded' => 'spatial-data'];
         $decodedSpatial = $this->createStub(SpatialInterface::class);
         $initialStrategy = $this->createStub(DecoderStrategyInterface::class);
-        $strategy = $this->createMock(DecoderStrategyInterface::class);
+        $strategy = $this->createMock(ArrayDecoderStrategyInterface::class);
         $strategy
             ->expects($this->once())
             ->method('decode')
