@@ -61,6 +61,8 @@ final class WktParser
             Lexer::T_POINT => (new PointWktParser($this->cursor, $this->coordinateReader, $this->factory))->parse(),
             Lexer::T_LINESTRING => (new LineStringWktParser($this->cursor, $this->coordinateReader, $this->factory))->parse(),
             Lexer::T_MULTILINESTRING => (new MultiLineStringWktParser($this->cursor, $this->coordinateReader, $this->factory))->parse(),
+            Lexer::T_POLYGON => (new PolygonWktParser($this->cursor, $this->coordinateReader, $this->factory))->parse(),
+            Lexer::T_MULTIPOLYGON => (new MultiPolygonWktParser($this->cursor, $this->coordinateReader, $this->factory))->parse(),
             default => throw $this->cursor->createInvalidInputException('The supplied WKT geometry type is not supported.'),
         };
     }

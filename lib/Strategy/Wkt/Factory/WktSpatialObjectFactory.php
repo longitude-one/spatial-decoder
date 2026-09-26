@@ -19,7 +19,9 @@ namespace LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory;
 use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
 use LongitudeOne\SpatialTypes\Interfaces\LineStringInterface;
 use LongitudeOne\SpatialTypes\Interfaces\MultiLineStringInterface;
+use LongitudeOne\SpatialTypes\Interfaces\MultiPolygonInterface;
 use LongitudeOne\SpatialTypes\Interfaces\PointInterface;
+use LongitudeOne\SpatialTypes\Interfaces\PolygonInterface;
 
 /**
  * Creates supported spatial objects from parsed WKT coordinates.
@@ -32,7 +34,11 @@ final class WktSpatialObjectFactory
 
     private readonly WktMultiLineStringFactory $multiLineStringFactory;
 
+    private readonly WktMultiPolygonFactory $multiPolygonFactory;
+
     private readonly WktPointFactory $pointFactory;
+
+    private readonly WktPolygonFactory $polygonFactory;
 
     /**
      * Construct the spatial-object factory and its dimension-specific factories.
@@ -42,6 +48,8 @@ final class WktSpatialObjectFactory
         $this->pointFactory = new WktPointFactory();
         $this->lineStringFactory = new WktLineStringFactory($this->pointFactory);
         $this->multiLineStringFactory = new WktMultiLineStringFactory($this->lineStringFactory);
+        $this->polygonFactory = new WktPolygonFactory($this->lineStringFactory);
+        $this->multiPolygonFactory = new WktMultiPolygonFactory($this->polygonFactory);
     }
 
     /**
@@ -79,6 +87,17 @@ final class WktSpatialObjectFactory
     }
 
     /**
+     * Create a multi-polygon from its dimension and ordered polygon coordinates.
+     *
+     * @param CoordinateDimensionEnum           $dimension coordinate dimension of the multi-polygon
+     * @param list<list<list<list<float|int>>>> $polygons  ordered polygon coordinates
+     */
+    public function createMultiPolygon(CoordinateDimensionEnum $dimension, array $polygons): MultiPolygonInterface
+    {
+        return $this->multiPolygonFactory->createMultiPolygon($dimension, $polygons);
+    }
+
+    /**
      * Create a point from its dimension and ordinates.
      *
      * @param CoordinateDimensionEnum $dimension coordinate dimension of the point
@@ -87,5 +106,16 @@ final class WktSpatialObjectFactory
     public function createPoint(CoordinateDimensionEnum $dimension, array $ordinates): PointInterface
     {
         return $this->pointFactory->createPoint($dimension, $ordinates);
+    }
+
+    /**
+     * Create a polygon from its dimension and ordered ring coordinates.
+     *
+     * @param CoordinateDimensionEnum     $dimension coordinate dimension of the polygon
+     * @param list<list<list<float|int>>> $rings     ordered ring coordinates
+     */
+    public function createPolygon(CoordinateDimensionEnum $dimension, array $rings): PolygonInterface
+    {
+        return $this->polygonFactory->createPolygon($dimension, $rings);
     }
 }

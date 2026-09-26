@@ -39,7 +39,7 @@ class WktGeometryDispatchTest extends TestCase
     public static function unsupportedGeometryWkts(): iterable
     {
         yield 'empty input' => [''];
-        yield 'unsupported geometry type' => ['POLYGON EMPTY'];
+        yield 'unsupported geometry type' => ['TRIANGLE EMPTY'];
         yield 'unknown geometry word' => ['foo'];
     }
 
