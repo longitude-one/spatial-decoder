@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace LongitudeOne\SpatialDecoder\Strategy\Wkt;
 
+use LongitudeOne\Core\Diagnostic\DiagnosticValueFormatter;
 use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
 use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
@@ -31,6 +32,10 @@ use LongitudeOne\SpatialTypes\Types\Dimension4zm\Geometry\Point as Point4D;
  */
 final class WktParser
 {
+    /** Original WKT input retained for safe error messages. */
+    private string $input;
+
+    /** Token stream consumed while parsing the supported WKT syntax. */
     private Lexer $lexer;
 
     /**
@@ -40,6 +45,7 @@ final class WktParser
      */
     public function __construct(string $input)
     {
+        $this->input = $input;
         $this->lexer = new Lexer($input);
         $this->lexer->moveNext();
     }
@@ -50,7 +56,7 @@ final class WktParser
     public function parse(): SpatialInterface
     {
         if (!$this->lexer->isNextToken(Lexer::T_POINT)) {
-            throw new InvalidArgumentException('The supplied WKT geometry type is not supported.');
+            throw $this->createInvalidInputException('The supplied WKT geometry type is not supported.');
         }
 
         $this->lexer->moveNext();
@@ -66,7 +72,7 @@ final class WktParser
     private function assertEnd(): void
     {
         if (null !== $this->lexer->lookahead) {
-            throw new InvalidArgumentException('The WKT input contains trailing or unsupported data.');
+            throw $this->createInvalidInputException('The WKT input contains trailing or unsupported data.');
         }
     }
 
@@ -110,7 +116,7 @@ final class WktParser
     {
         $token = $this->lexer->lookahead;
         if (null === $token || !$token->isA(Lexer::T_INTEGER, Lexer::T_FLOAT)) {
-            throw new InvalidArgumentException('A WKT point ordinate is missing or malformed.');
+            throw $this->createInvalidInputException('A WKT point ordinate is missing or malformed.');
         }
 
         $this->lexer->moveNext();
@@ -124,7 +130,7 @@ final class WktParser
 
         $number = (float) $value;
         if (!is_finite($number)) {
-            throw new InvalidArgumentException('A WKT point ordinate is outside the supported numeric range.');
+            throw $this->createInvalidInputException('A WKT point ordinate is outside the supported numeric range.');
         }
 
         return $number;
@@ -140,7 +146,7 @@ final class WktParser
         while ($this->lexer->isNextTokenAny([Lexer::T_INTEGER, Lexer::T_FLOAT])) {
             $token = $this->lexer->lookahead;
             if (null !== $previousEnd && $token->position <= $previousEnd) {
-                throw new InvalidArgumentException('WKT point ordinates must be separated by whitespace.');
+                throw $this->createInvalidInputException('WKT point ordinates must be separated by whitespace.');
             }
 
             $previousEnd = $token->position + \strlen((string) $token->value);
@@ -165,6 +171,20 @@ final class WktParser
             CoordinateDimensionEnum::XYM => new Point3DM(),
             CoordinateDimensionEnum::XYZM => new Point4D(),
         };
+    }
+
+    /**
+     * Create an exception that includes a safe rendering of the supplied WKT.
+     *
+     * @param string $reason explanation of why the input was rejected
+     *
+     * @return InvalidArgumentException exception with a sanitized input value
+     */
+    private function createInvalidInputException(string $reason): InvalidArgumentException
+    {
+        $formattedInput = DiagnosticValueFormatter::format($this->input);
+
+        return new InvalidArgumentException(\sprintf('%s Invalid WKT input: "%s".', $reason, $formattedInput));
     }
 
     /**
@@ -197,10 +217,10 @@ final class WktParser
         $expectedType = match ($symbol) {
             '(' => Lexer::T_OPEN_PARENTHESIS,
             ')' => Lexer::T_CLOSE_PARENTHESIS,
-            default => throw new InvalidArgumentException('The WKT geometry syntax is malformed.'),
+            default => throw $this->createInvalidInputException('The WKT geometry syntax is malformed.'),
         };
         if (!$this->lexer->isNextToken($expectedType)) {
-            throw new InvalidArgumentException('The WKT geometry syntax is malformed.');
+            throw $this->createInvalidInputException('The WKT geometry syntax is malformed.');
         }
 
         $this->lexer->moveNext();
@@ -220,7 +240,7 @@ final class WktParser
     {
         $ordinate = $ordinates[$index] ?? null;
         if (null === $ordinate) {
-            throw new InvalidArgumentException('The WKT point is missing a required ordinate.');
+            throw $this->createInvalidInputException('The WKT point is missing a required ordinate.');
         }
 
         return $ordinate;
@@ -264,11 +284,11 @@ final class WktParser
             2 => CoordinateDimensionEnum::XY,
             3 => CoordinateDimensionEnum::XYZ,
             4 => CoordinateDimensionEnum::XYZM,
-            default => throw new InvalidArgumentException('The WKT point has an unsupported number of ordinates.'),
+            default => throw $this->createInvalidInputException('The WKT point has an unsupported number of ordinates.'),
         };
 
         if (\count($ordinates) !== $this->ordinateCount($dimension)) {
-            throw new InvalidArgumentException('The WKT point ordinates do not match its coordinate dimension.');
+            throw $this->createInvalidInputException('The WKT point ordinates do not match its coordinate dimension.');
         }
 
         return $this->createPoint($dimension, $ordinates);

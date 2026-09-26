@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace LongitudeOne\SpatialDecoder\Tests\Unit;
 
+use LongitudeOne\Core\Diagnostic\DiagnosticValueFormatter;
 use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialDecoder\Strategy\WktDecoderStrategy;
 use LongitudeOne\SpatialTypes\Interfaces\PointInterface;
@@ -39,6 +40,8 @@ class WktDecoderStrategyTest extends TestCase
         yield 'XYZ' => ['POINT Z (1 -2 3)', [1, -2, 3], true, false];
         yield 'XYM' => ['POINT M (1 2 3.1)', [1, 2, 3.1], false, true];
         yield 'XYZM' => ['POINT ZM (1 2 3 4.0)', [1, 2, 3, 4.0], true, true];
+        yield 'inferred XYZ' => ['POINT (1 2 3)', [1, 2, 3], true, false];
+        yield 'inferred XYZM' => ['POINT (1 2 3 4)', [1, 2, 3, 4], true, true];
     }
 
     /**
@@ -64,10 +67,23 @@ class WktDecoderStrategyTest extends TestCase
         yield 'comma between point ordinates' => ['POINT (1, 2)'];
         yield 'unseparated ordinates' => ['POINT (1-2)'];
         yield 'trailing input' => ['POINT (1 2) trailing'];
+        yield 'too many parentheses' => ['POINT (1 2))'];
         yield 'unsupported geometry type' => ['LINESTRING EMPTY'];
         yield 'non-finite ordinate' => ['POINT (1e309 2)'];
         yield 'unknown word' => ['POINT EMP'];
         yield 'unknown geometry word' => ['foo'];
+    }
+
+    /** Test exception messages include a sanitized representation of the input. */
+    public function testDecodeErrorMessageSanitizesInvalidInput(): void
+    {
+        $input = "POINT EMP\nforged log entry";
+        $formattedInput = DiagnosticValueFormatter::format($input);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessageIsOrContains(\sprintf('Invalid WKT input: "%s".', $formattedInput));
+
+        (new WktDecoderStrategy())->decode($input);
     }
 
     /**
@@ -113,10 +129,10 @@ class WktDecoderStrategyTest extends TestCase
     /**
      * Test decoding of a point in the supplied coordinate dimension.
      *
-     * @param string          $wkt                 WKT representation of the point
-     * @param array<int, int> $expectedCoordinates expected ordered ordinates
-     * @param bool            $hasZ                whether the point has a Z ordinate
-     * @param bool            $hasM                whether the point has an M ordinate
+     * @param string                $wkt                 WKT representation of the point
+     * @param array<int, int|float> $expectedCoordinates expected ordered ordinates
+     * @param bool                  $hasZ                whether the point has a Z ordinate
+     * @param bool                  $hasM                whether the point has an M ordinate
      */
     #[DataProvider('coordinateDimensionWkts')]
     public function testDecodeSupportsEveryCoordinateDimension(string $wkt, array $expectedCoordinates, bool $hasZ, bool $hasM): void
