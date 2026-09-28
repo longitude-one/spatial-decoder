@@ -140,6 +140,15 @@ class PointWktDecoderTest extends TestCase
         (new WktDecoderStrategy())->decode($wkt);
     }
 
+    /** Test rejection of SRID-prefixed WKT with the strategy-specific error. */
+    public function testDecodeRejectsSridWithStrategySpecificMessage(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessageIsOrContains('WKT Strategy does not support SRID. Please use the Extended WKT Strategy.');
+
+        (new WktDecoderStrategy())->decode('SRID=4326;POINT (1 2)');
+    }
+
     /**
      * Test decoding of a point in the supplied coordinate dimension.
      *

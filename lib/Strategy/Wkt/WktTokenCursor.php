@@ -39,6 +39,10 @@ final class WktTokenCursor
     {
         $this->lexer = new Lexer($input);
         $this->lexer->moveNext();
+
+        if ($this->lexer->isNextToken(Lexer::T_SRID)) {
+            throw new InvalidArgumentException('WKT Strategy does not support SRID. Please use the Extended WKT Strategy.');
+        }
     }
 
     /**
