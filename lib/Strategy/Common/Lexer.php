@@ -14,7 +14,7 @@
 
 declare(strict_types=1);
 
-namespace LongitudeOne\SpatialDecoder\Strategy\Wkt;
+namespace LongitudeOne\SpatialDecoder\Strategy\Common;
 
 use Doctrine\Common\Lexer\AbstractLexer;
 
@@ -71,9 +71,9 @@ class Lexer extends AbstractLexer
     public const T_ZM = 501;
 
     /**
-     * Initialize the lexer with optional WKT input.
+     * Initialize the lexer with optional spatial input.
      *
-     * @param string|null $input WKT text to tokenize
+     * @param string|null $input text to tokenize
      */
     public function __construct(?string $input = null)
     {
@@ -112,6 +112,7 @@ class Lexer extends AbstractLexer
     protected function getCatchablePatterns(): array
     {
         return [
+            '(?:geometrycollection|multilinestring|polyhedralsurface|circularstring|compoundcurve|compoundsurface|ellipticalcurve|geodesicstring|multipolygon|multisurface|multipoint|curvepolygon|linestring|brepsolid|nurbscurve|spiralcurve|geometry|triangle|polygon|surface|multicurve|clothoid|circle|curve|solid|tin|point)(?=(?:zm|z|m)(?:[^a-z]|$))',
             '[a-z]+',
             '[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:e[+-]?[0-9]+)?',
             '[(),=;]',

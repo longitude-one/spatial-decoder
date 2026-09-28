@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser;
 
+use LongitudeOne\SpatialDecoder\Strategy\Common\Lexer;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktGeometryCollectionFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktLineStringFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktMultiLineStringFactory;
@@ -23,7 +24,6 @@ use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktMultiPointFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktMultiPolygonFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktPointFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktPolygonFactory;
-use LongitudeOne\SpatialDecoder\Strategy\Wkt\Lexer;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktCoordinateReader;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor;
 

@@ -19,6 +19,7 @@ namespace LongitudeOne\SpatialDecoder\Strategy\Wkt;
 use Doctrine\Common\Lexer\Token;
 use LongitudeOne\Core\Diagnostic\DiagnosticValueFormatter;
 use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
+use LongitudeOne\SpatialDecoder\Strategy\Common\Lexer;
 
 /**
  * Owns the WKT lexer cursor and input-specific syntax errors.
