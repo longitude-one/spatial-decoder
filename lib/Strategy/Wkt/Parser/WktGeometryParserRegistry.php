@@ -16,8 +16,11 @@ declare(strict_types=1);
 
 namespace LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser;
 
+use Doctrine\Common\Lexer\Token;
 use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
+use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialDecoder\Exception\LogicException;
+use LongitudeOne\SpatialDecoder\Strategy\Common\Lexer;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 
@@ -49,13 +52,15 @@ final class WktGeometryParserRegistry implements WktGeometryParserDispatcherInte
      */
     public function parseNext(?CoordinateDimensionEnum $inheritedDimension): SpatialInterface
     {
-        $geometryType = $this->cursor->currentToken()?->type;
+        $geometryToken = $this->cursor->currentToken();
+        $geometryType = $geometryToken?->type;
         $parser = null === $geometryType ? null : ($this->parsers[$geometryType] ?? null);
-        if (null === $parser) {
+        if (null === $geometryToken || null === $parser) {
             throw $this->cursor->createInvalidInputException('The supplied WKT geometry type is not supported.');
         }
 
         $this->cursor->moveNext();
+        $this->rejectCompactDimensionSuffix($geometryToken);
 
         return $parser->parse($inheritedDimension);
     }
@@ -73,5 +78,26 @@ final class WktGeometryParserRegistry implements WktGeometryParserDispatcherInte
         }
 
         $this->parsers[$geometryType] = $parser;
+    }
+
+    /**
+     * Reject dimension tokens attached directly to the geometry type.
+     *
+     * @param Token<int, int|string> $geometryToken geometry token just dispatched
+     */
+    private function rejectCompactDimensionSuffix(Token $geometryToken): void
+    {
+        $dimensionToken = $this->cursor->currentToken();
+        if (null === $dimensionToken
+            || !\in_array($dimensionToken->type, [Lexer::T_M, Lexer::T_Z, Lexer::T_ZM], true)
+            || $dimensionToken->position !== $geometryToken->position + \strlen((string) $geometryToken->value)
+        ) {
+            return;
+        }
+
+        $geometry = (string) $geometryToken->value;
+        $dimension = (string) $dimensionToken->value;
+
+        throw new InvalidArgumentException(\sprintf('The compact dimension suffix in "%s" is not valid OGC WKT (Simple Feature Access 1.2.1). Use "%s %s" or consider the more permissive EWKT strategy.', $geometry.$dimension, $geometry, $dimension));
     }
 }

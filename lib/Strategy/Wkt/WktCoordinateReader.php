@@ -19,6 +19,7 @@ namespace LongitudeOne\SpatialDecoder\Strategy\Wkt;
 use Doctrine\Common\Lexer\Token;
 use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
 use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
+use LongitudeOne\SpatialDecoder\Strategy\Common\Lexer;
 
 /**
  * Reads and validates WKT dimensions, coordinates, and coordinate sequences.

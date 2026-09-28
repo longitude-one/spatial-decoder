@@ -16,13 +16,13 @@ declare(strict_types=1);
 
 namespace LongitudeOne\SpatialDecoder\Tests\Unit;
 
-use LongitudeOne\SpatialDecoder\Strategy\Wkt\Lexer;
+use LongitudeOne\SpatialDecoder\Strategy\Common\Lexer;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @internal
  *
- * @covers \LongitudeOne\SpatialDecoder\Strategy\Wkt\Lexer
+ * @covers \LongitudeOne\SpatialDecoder\Strategy\Common\Lexer
  */
 class LexerTest extends TestCase
 {
@@ -54,6 +54,28 @@ class LexerTest extends TestCase
             Lexer::T_FLOAT,
         ], array_column($tokens, 'type'));
         self::assertSame($values, array_column($tokens, 'value'));
+    }
+
+    /** Test compact dimension suffixes and SRID syntax retain token positions. */
+    public function testTokenizesCompactDimensionsAndSridPrefix(): void
+    {
+        $tokens = $this->tokenize(new Lexer('POINTM POINTZ POINTZM SRID=4326;'));
+
+        self::assertSame([
+            [Lexer::T_POINT, 'POINT', 0],
+            [Lexer::T_M, 'M', 5],
+            [Lexer::T_POINT, 'POINT', 7],
+            [Lexer::T_Z, 'Z', 12],
+            [Lexer::T_POINT, 'POINT', 14],
+            [Lexer::T_ZM, 'ZM', 19],
+            [Lexer::T_SRID, 'SRID', 22],
+            [Lexer::T_EQUALS, '=', 26],
+            [Lexer::T_INTEGER, '4326', 27],
+            [Lexer::T_SEMICOLON, ';', 31],
+        ], array_map(
+            static fn (array $token): array => [$token['type'], $token['value'], $token['position']],
+            $tokens
+        ));
     }
 
     /** Test tokenization of WKT keywords, punctuation, and unknown characters. */

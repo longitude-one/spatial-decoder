@@ -17,9 +17,9 @@ declare(strict_types=1);
 namespace LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser;
 
 use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
+use LongitudeOne\SpatialDecoder\Strategy\Common\Lexer;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktMultiPolygonFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktPolygonFactory;
-use LongitudeOne\SpatialDecoder\Strategy\Wkt\Lexer;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktCoordinateReader;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
