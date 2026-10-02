@@ -81,6 +81,14 @@ final class WktParserFactory
             new GeometryCollectionWktParser($cursor, $coordinateReader, new WktGeometryCollectionFactory(), $registry)
         );
 
+        if (WktDialect::EWKT === $dialect) {
+            $registry->register(Lexer::T_TRIANGLE, new TriangleEwktParser(new PolygonWktParser($cursor, $coordinateReader, $polygonFactory)));
+            $registry->register(
+                Lexer::T_POLYHEDRALSURFACE,
+                new PolyhedralSurfaceEwktParser(new MultiPolygonWktParser($cursor, $coordinateReader, new WktMultiPolygonFactory($polygonFactory), $polygonFactory))
+            );
+        }
+
         return new WktParser($cursor, $registry);
     }
 }

@@ -22,7 +22,7 @@ use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktMultiPolygonFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktPolygonFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktCoordinateReader;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor;
-use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
+use LongitudeOne\SpatialTypes\Interfaces\MultiPolygonInterface;
 
 /**
  * Parses WKT multi-polygon representations.
@@ -55,9 +55,9 @@ final class MultiPolygonWktParser implements WktGeometryParserInterface
      *
      * @param CoordinateDimensionEnum|null $inheritedDimension dimension inherited from a parent collection
      *
-     * @return SpatialInterface the decoded multi-polygon
+     * @return MultiPolygonInterface the decoded multi-polygon
      */
-    public function parse(?CoordinateDimensionEnum $inheritedDimension = null): SpatialInterface
+    public function parse(?CoordinateDimensionEnum $inheritedDimension = null): MultiPolygonInterface
     {
         $dimension = $this->coordinateReader->consumeDimension($inheritedDimension);
         if ($this->cursor->isNextToken(Lexer::T_EMPTY)) {
