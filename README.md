@@ -14,6 +14,37 @@ Feel free to provide additional strategies for decoding other formats into spati
 
 See the [strategy guide](docs/strategies.md) for a comparison of the five formats, usage examples, implementation limitations, and links to reference documentation.
 
+## EWKT decoding
+
+```php
+use LongitudeOne\SpatialDecoder\Decoder;
+use LongitudeOne\SpatialDecoder\Strategy\EwktDecoderStrategy;
+
+$decoder = new Decoder(new EwktDecoderStrategy());
+$point = $decoder->decode('SRID=4326;POINT (1 2)');
+// $point->getSrid() === 4326
+
+$point = $decoder->decode('POINT (1 2)');
+// $point->getSrid() === 0
+```
+
+EWKT reuses the supported WKT geometry syntax, including explicit Z, M and ZM
+markers and EMPTY geometries. The optional `SRID=<value>;` prefix is accepted
+only before the root geometry; the reference applies to all collection members.
+Coordinates retain their original order and values.
+
+SRIDs are unsigned decimal integers from `0` through `PHP_INT_MAX`, with leading
+zeroes accepted. Prefix keywords are case-insensitive and whitespace between
+tokens is accepted by the shared lexer. Negative values, signs, fractions,
+exponents, overflow and nested prefixes raise the decoder's
+`InvalidArgumentException`. WKT decoding continues to reject SRID prefixes.
+
+This implements the SRID extension of [PostGIS EWKT](https://postgis.net/docs/ST_GeomFromEWKT.html)
+for the geometry syntax already supported by this decoder, not every PostGIS
+geometry type or parser extension. It preserves supported SRIDs without applying
+PostGIS-specific SRID normalization. The [PostGIS grammar](https://github.com/postgis/postgis/blob/master/liblwgeom/lwin_wkt_parse.y)
+places its optional SRID at the root; EWKT is a vendor extension, not OGC WKT.
+
 ## Current status
 ![longitude-one/spatial--decoder](https://img.shields.io/badge/longitude--one-spatial--decoder-blue)
 ![Stable release](https://img.shields.io/github/v/release/longitude-one/spatial-decoder)

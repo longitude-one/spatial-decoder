@@ -33,16 +33,12 @@ final class WktTokenCursor
     /**
      * Construct a cursor for the supplied WKT input.
      *
-     * @param string $input WKT text to parse
+     * @param string $input WKT or EWKT text to parse
      */
     public function __construct(private string $input)
     {
         $this->lexer = new Lexer($input);
         $this->lexer->moveNext();
-
-        if ($this->lexer->isNextToken(Lexer::T_SRID)) {
-            throw new InvalidArgumentException('WKT Strategy does not support SRID. Please use the Extended WKT Strategy.');
-        }
     }
 
     /**
