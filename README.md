@@ -45,6 +45,25 @@ geometry type or parser extension. It preserves supported SRIDs without applying
 PostGIS-specific SRID normalization. The [PostGIS grammar](https://github.com/postgis/postgis/blob/master/liblwgeom/lwin_wkt_parse.y)
 places its optional SRID at the root; EWKT is a vendor extension, not OGC WKT.
 
+## Recognized types awaiting implementation
+
+`LongitudeOne\SpatialDecoder\Exception\NotYetImplementedException` is available
+for strategies that recognize a valid spatial type whose spatial object cannot
+yet be instantiated. Construct it with the recognized `GeometryTypeEnum` value:
+
+```php
+throw new \LongitudeOne\SpatialDecoder\Exception\NotYetImplementedException(\LongitudeOne\Core\Enum\GeometryTypeEnum::CIRCULARSTRING);
+```
+
+The exception implements `DecoderExceptionInterface` and extends `\RuntimeException`.
+Consumers can retrieve the same enum value with `getSpatialType()`; its message
+identifies that type and states that decoding is not yet implemented. It is
+independent of the input format and must not be used for malformed input, unknown
+types, or types invalid for the applicable format.
+
+This exception adds a shared contract for strategies; existing decoding strategies
+and their supported types are unchanged.
+
 ## Current status
 ![longitude-one/spatial--decoder](https://img.shields.io/badge/longitude--one-spatial--decoder-blue)
 ![Stable release](https://img.shields.io/github/v/release/longitude-one/spatial-decoder)
