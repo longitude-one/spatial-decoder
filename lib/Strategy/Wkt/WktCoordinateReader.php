@@ -31,9 +31,10 @@ final class WktCoordinateReader
     /**
      * Construct a coordinate reader.
      *
-     * @param WktTokenCursor $cursor lexer cursor for the WKT input
+     * @param WktTokenCursor $cursor  lexer cursor for the WKT input
+     * @param WktDialect     $dialect dimensional syntax accepted by the representation
      */
-    public function __construct(private WktTokenCursor $cursor)
+    public function __construct(private WktTokenCursor $cursor, private WktDialect $dialect = WktDialect::WKT)
     {
     }
 
@@ -191,11 +192,13 @@ final class WktCoordinateReader
     }
 
     /**
-     * Infer XY for unmarked coordinates and reject all other coordinate dimensions.
+     * Resolve unmarked coordinates according to the selected representation.
      *
      * OGC Simple Feature Access 1.2.1 (OGC 06-103r4) defines unmarked
      * coordinates in its 2D grammar (§7.2.2). Higher coordinate dimensions
      * use separate grammars tagged Z, M, and ZM (§7.2.3 to §7.2.5).
+     * EWKT follows the approved PostGIS extension: 3 ordinates imply XYZ
+     * and 4 imply XYZM; XYM always requires an M marker.
      *
      * @param int $ordinateCount number of ordinates in the coordinate
      *
@@ -203,9 +206,15 @@ final class WktCoordinateReader
      */
     private function dimensionForUnmarkedCoordinate(int $ordinateCount): CoordinateDimensionEnum
     {
+        if (WktDialect::WKT === $this->dialect && 2 !== $ordinateCount) {
+            throw $this->cursor->createInvalidInputException('A WKT coordinate with a non-XY dimension requires an explicit dimension marker.');
+        }
+
         return match ($ordinateCount) {
             2 => CoordinateDimensionEnum::XY,
-            default => throw $this->cursor->createInvalidInputException('A WKT coordinate with a non-XY dimension requires an explicit dimension marker.'),
+            3 => CoordinateDimensionEnum::XYZ,
+            4 => CoordinateDimensionEnum::XYZM,
+            default => throw $this->cursor->createInvalidInputException('An EWKT coordinate must contain two, three or four ordinates.'),
         };
     }
 

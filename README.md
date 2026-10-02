@@ -33,6 +33,17 @@ markers and EMPTY geometries. The optional `SRID=<value>;` prefix is accepted
 only before the root geometry; the reference applies to all collection members.
 Coordinates retain their original order and values.
 
+EWKT accepts separated (`POINT Z`, `POINT M`, `POINT ZM`) and compact
+(`POINTZ`, `POINTM`, `POINTZM`) dimensional markers. Without a marker or an
+inherited collection dimension, two ordinates resolve to XY, three to XYZ,
+and four to XYZM. For example, `POINT (1 2 3)` and `POINTZ (1 2 3)` produce
+the same XYZ point. XYM requires an explicit M marker, which collection
+members may inherit. Tuples must match the resolved dimension, and conflicting
+markers or mixed dimensions are rejected. Unmarked EMPTY geometries retain
+the existing XY default unless a collection dimension is inherited.
+These rules apply with or without an SRID prefix. Standard WKT decoding
+continues to require explicit markers for non-XY coordinates.
+
 SRIDs are unsigned decimal integers from `0` through `PHP_INT_MAX`, with leading
 zeroes accepted. Prefix keywords are case-insensitive and whitespace between
 tokens is accepted by the shared lexer. Negative values, signs, fractions,
