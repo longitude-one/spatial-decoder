@@ -18,7 +18,7 @@ namespace LongitudeOne\SpatialDecoder\Strategy\Common;
 
 use Doctrine\Common\Lexer\AbstractLexer;
 use LongitudeOne\Core\Enum\GeometryTypeEnum;
-use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
+use LongitudeOne\SpatialDecoder\Exception\NonInstantiableGeometryTypeException;
 use LongitudeOne\SpatialDecoder\Exception\NotYetImplementedException;
 use LongitudeOne\SpatialTypes\Implementation\SpatialTypeImplementationStatus;
 
@@ -186,7 +186,7 @@ class Lexer extends AbstractLexer
             }
 
             if (!$geometryType->isInstantiable()) {
-                throw new InvalidArgumentException(\sprintf('The spatial type "%s" is not instantiable.', $geometryType->value));
+                throw new NonInstantiableGeometryTypeException($geometryType);
             }
 
             if (!SpatialTypeImplementationStatus::isFullyImplemented($geometryType)) {

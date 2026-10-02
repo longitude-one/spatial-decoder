@@ -75,7 +75,7 @@ The shared WKT/EWKT lexer uses `SpatialTypeImplementationStatus` from
 `longitude-one/spatial-types` **0.0.1-alpha.4** to classify recognized geometry
 keywords. `CIRCULARSTRING`, `COMPOUNDCURVE`, `CURVEPOLYGON`, `MULTICURVE`,
 `MULTISURFACE`, and `TIN` raise `NotYetImplementedException`. Non-instantiable
-enum types raise the decoder's `InvalidArgumentException`. Implemented types
+enum types raise `NonInstantiableGeometryTypeException`. Implemented types
 continue to the representation-specific parsers. EWKT supports `POINT`,
 `LINESTRING`, `POLYGON`, `TRIANGLE`, `POLYHEDRALSURFACE`, `MULTIPOINT`,
 `MULTILINESTRING`, `MULTIPOLYGON`, and `GEOMETRYCOLLECTION`, including nested
@@ -95,6 +95,23 @@ raises this exception even if its body or surrounding input is malformed.
 The exception reports an implementation limitation; it does not certify that
 the complete input is valid. Unknown keywords and malformed input without an
 unimplemented keyword retain the existing invalid-input handling.
+
+## Non-instantiable geometry types
+
+WKT and EWKT reject every type for which `GeometryTypeEnum::isInstantiable()`
+returns `false` (`GEOMETRY`, `CURVE`, `SURFACE`, and `SOLID`) with
+`LongitudeOne\SpatialDecoder\Exception\NonInstantiableGeometryTypeException`.
+Its message identifies the recognized type and states that it is not instantiable;
+`getSpatialType()` returns the corresponding enum value. The exception implements
+`DecoderExceptionInterface` and extends PHP's `\InvalidArgumentException`.
+
+This classification happens in the shared lexer, before spatial object creation
+or body validation, including for nested collection members. It is distinct from
+`NotYetImplementedException` for recognized instantiable types awaiting implementation
+and the decoder's `InvalidArgumentException` for unknown geometry names.
+Consumers previously catching the decoder's `InvalidArgumentException` for
+non-instantiable types should now catch the dedicated exception or the common
+`DecoderExceptionInterface`.
 
 ## Current status
 ![longitude-one/spatial--decoder](https://img.shields.io/badge/longitude--one-spatial--decoder-blue)
