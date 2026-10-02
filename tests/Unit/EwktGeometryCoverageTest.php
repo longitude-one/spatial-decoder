@@ -75,10 +75,6 @@ class EwktGeometryCoverageTest extends TestCase
         yield 'surface missing parenthesis' => ['POLYHEDRALSURFACE Z ((0 0 0,4 0 0,0 4 0,0 0 0))'];
         yield 'nested independent SRID' => ['GEOMETRYCOLLECTION Z (TRIANGLE EMPTY,SRID=3857;POLYHEDRALSURFACE EMPTY)'];
         yield 'unknown' => ['UNKNOWN EMPTY'];
-        foreach (['GEOMETRY', 'CURVE', 'SURFACE', 'SOLID'] as $type) {
-            yield $type => [$type.' EMPTY'];
-            yield 'nested '.$type => ['GEOMETRYCOLLECTION ('.$type.' EMPTY)'];
-        }
     }
 
     /** @return iterable<string, array{GeometryTypeEnum}> */

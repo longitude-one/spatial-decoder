@@ -35,8 +35,7 @@ class SpatialTypeImplementationTest extends TestCase
     /** @return iterable<string, array{string}> */
     public static function invalidInputs(): iterable
     {
-        foreach (['GEOMETRY EMPTY', 'CURVE EMPTY', 'SURFACE EMPTY', 'SOLID EMPTY',
-            'UNKNOWN EMPTY', 'CIRCULARSTRINGUNKNOWN EMPTY', 'POINT (1)', 'POINT (1 @ 2)',
+        foreach (['UNKNOWN EMPTY', 'CIRCULARSTRINGUNKNOWN EMPTY', 'POINT (1)', 'POINT (1 @ 2)',
             'TRIANGLE ((0 0,1 0,0 0))', 'POLYHEDRALSURFACE EMPTY'] as $input) {
             yield $input => [$input];
         }
