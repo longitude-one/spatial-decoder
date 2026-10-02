@@ -14,7 +14,7 @@
     "require": {
         "php": "^8.4",
         "doctrine/lexer": "^3.0.2",
-        "longitude-one/spatial-types": "0.0.1-alpha.2"
+        "longitude-one/spatial-types": "0.0.1-alpha.4"
     },
     "require-dev": {
         "phpunit/phpunit": "^13.0"

@@ -17,6 +17,10 @@ declare(strict_types=1);
 namespace LongitudeOne\SpatialDecoder\Strategy\Common;
 
 use Doctrine\Common\Lexer\AbstractLexer;
+use LongitudeOne\Core\Enum\GeometryTypeEnum;
+use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
+use LongitudeOne\SpatialDecoder\Exception\NotYetImplementedException;
+use LongitudeOne\SpatialTypes\Implementation\SpatialTypeImplementationStatus;
 
 /**
  * Convert spatial value to tokens.
@@ -175,7 +179,22 @@ class Lexer extends AbstractLexer
      */
     private function getWordType(string $value): int
     {
-        $name = __CLASS__.'::T_'.strtoupper($value);
+        $keyword = strtoupper($value);
+        foreach (GeometryTypeEnum::cases() as $geometryType) {
+            if ($geometryType->name !== $keyword) {
+                continue;
+            }
+
+            if (!$geometryType->isInstantiable()) {
+                throw new InvalidArgumentException(\sprintf('The spatial type "%s" is not instantiable.', $geometryType->value));
+            }
+
+            if (!SpatialTypeImplementationStatus::isFullyImplemented($geometryType)) {
+                throw new NotYetImplementedException($geometryType);
+            }
+        }
+
+        $name = __CLASS__.'::T_'.$keyword;
         if (!\defined($name)) {
             return self::T_STRING;
         }

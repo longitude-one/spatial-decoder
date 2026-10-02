@@ -45,6 +45,36 @@ geometry type or parser extension. It preserves supported SRIDs without applying
 PostGIS-specific SRID normalization. The [PostGIS grammar](https://github.com/postgis/postgis/blob/master/liblwgeom/lwin_wkt_parse.y)
 places its optional SRID at the root; EWKT is a vendor extension, not OGC WKT.
 
+## Recognized types awaiting implementation
+
+`LongitudeOne\SpatialDecoder\Exception\NotYetImplementedException` is available
+for strategies that recognize a valid spatial type whose spatial object cannot
+yet be instantiated. Construct it with the recognized `GeometryTypeEnum` value:
+
+```php
+throw new \LongitudeOne\SpatialDecoder\Exception\NotYetImplementedException(\LongitudeOne\Core\Enum\GeometryTypeEnum::CIRCULARSTRING);
+```
+
+The exception implements `DecoderExceptionInterface` and extends `\RuntimeException`.
+Consumers can retrieve the same enum value with `getSpatialType()`; its message
+identifies that type and states that decoding is not yet implemented. It is
+independent of the input format.
+
+The shared WKT/EWKT lexer uses `SpatialTypeImplementationStatus` from
+`longitude-one/spatial-types` **0.0.1-alpha.4** to classify recognized geometry
+keywords. `CIRCULARSTRING`, `COMPOUNDCURVE`, `CURVEPOLYGON`, `MULTICURVE`,
+`MULTISURFACE`, and `TIN` raise `NotYetImplementedException`. Non-instantiable
+enum types raise the decoder's `InvalidArgumentException`. Implemented types
+continue to the existing parsers; implementation in the spatial model does not
+by itself imply parser support (for example, `TRIANGLE` and `POLYHEDRALSURFACE`).
+
+Classification happens during lexical scanning, before grammar validation,
+including inside collections. A recognized unimplemented keyword therefore
+raises this exception even if its body or surrounding input is malformed.
+The exception reports an implementation limitation; it does not certify that
+the complete input is valid. Unknown keywords and malformed input without an
+unimplemented keyword retain the existing invalid-input handling.
+
 ## Current status
 ![longitude-one/spatial--decoder](https://img.shields.io/badge/longitude--one-spatial--decoder-blue)
 ![Stable release](https://img.shields.io/github/v/release/longitude-one/spatial-decoder)
