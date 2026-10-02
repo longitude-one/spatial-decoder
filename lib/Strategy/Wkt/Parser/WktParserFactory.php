@@ -26,6 +26,7 @@ use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktMultiPolygonFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktPointFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktPolygonFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktCoordinateReader;
+use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktDialect;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor;
 
 /**
@@ -55,15 +56,16 @@ final class WktParserFactory
     /**
      * Create a geometry parser from a cursor positioned after any EWKT prefix.
      *
-     * @param WktTokenCursor $cursor shared cursor positioned at the root geometry
+     * @param WktTokenCursor $cursor  shared cursor positioned at the root geometry
+     * @param WktDialect     $dialect dimensional syntax accepted by the representation
      */
-    public function createFromCursor(WktTokenCursor $cursor): WktParser
+    public function createFromCursor(WktTokenCursor $cursor, WktDialect $dialect = WktDialect::WKT): WktParser
     {
-        $coordinateReader = new WktCoordinateReader($cursor);
+        $coordinateReader = new WktCoordinateReader($cursor, $dialect);
         $pointFactory = new WktPointFactory();
         $lineStringFactory = new WktLineStringFactory($pointFactory);
         $polygonFactory = new WktPolygonFactory($lineStringFactory);
-        $registry = new WktGeometryParserRegistry($cursor);
+        $registry = new WktGeometryParserRegistry($cursor, $dialect);
 
         $registry->register(Lexer::T_POINT, new PointWktParser($cursor, $coordinateReader, $pointFactory));
         $registry->register(Lexer::T_LINESTRING, new LineStringWktParser($cursor, $coordinateReader, $lineStringFactory));

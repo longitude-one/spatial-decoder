@@ -21,6 +21,7 @@ use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
 use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialDecoder\Exception\LogicException;
 use LongitudeOne\SpatialDecoder\Strategy\Common\Lexer;
+use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktDialect;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 
@@ -37,9 +38,10 @@ final class WktGeometryParserRegistry implements WktGeometryParserDispatcherInte
     /**
      * Construct a registry for one WKT token stream.
      *
-     * @param WktTokenCursor $cursor lexer cursor shared by registered parsers
+     * @param WktTokenCursor $cursor  lexer cursor shared by registered parsers
+     * @param WktDialect     $dialect dimensional syntax accepted by the representation
      */
-    public function __construct(private WktTokenCursor $cursor)
+    public function __construct(private WktTokenCursor $cursor, private WktDialect $dialect = WktDialect::WKT)
     {
     }
 
@@ -60,7 +62,9 @@ final class WktGeometryParserRegistry implements WktGeometryParserDispatcherInte
         }
 
         $this->cursor->moveNext();
-        $this->rejectCompactDimensionSuffix($geometryToken);
+        if (WktDialect::WKT === $this->dialect) {
+            $this->rejectCompactDimensionSuffix($geometryToken);
+        }
 
         return $parser->parse($inheritedDimension);
     }

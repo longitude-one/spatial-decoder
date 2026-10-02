@@ -19,6 +19,7 @@ namespace LongitudeOne\SpatialDecoder\Strategy;
 use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialDecoder\Strategy\Common\Lexer;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\WktParserFactory;
+use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktDialect;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 
@@ -36,7 +37,7 @@ final class EwktDecoderStrategy implements StringDecoderStrategyInterface
     {
         $cursor = new WktTokenCursor($data);
         if (!$cursor->isNextToken(Lexer::T_SRID)) {
-            return (new WktParserFactory())->createFromCursor($cursor)->parse();
+            return (new WktParserFactory())->createFromCursor($cursor, WktDialect::EWKT)->parse();
         }
 
         $cursor->moveNext();
@@ -54,7 +55,7 @@ final class EwktDecoderStrategy implements StringDecoderStrategyInterface
 
         $this->consume($cursor, Lexer::T_SEMICOLON);
 
-        return (new WktParserFactory())->createFromCursor($cursor)->parse()->withSrid($srid);
+        return (new WktParserFactory())->createFromCursor($cursor, WktDialect::EWKT)->parse()->withSrid($srid);
     }
 
     /**
