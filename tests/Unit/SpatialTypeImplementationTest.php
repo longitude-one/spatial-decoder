@@ -37,7 +37,7 @@ class SpatialTypeImplementationTest extends TestCase
     {
         foreach (['GEOMETRY EMPTY', 'CURVE EMPTY', 'SURFACE EMPTY', 'SOLID EMPTY',
             'UNKNOWN EMPTY', 'CIRCULARSTRINGUNKNOWN EMPTY', 'POINT (1)', 'POINT (1 @ 2)',
-            'TRIANGLE EMPTY', 'POLYHEDRALSURFACE EMPTY'] as $input) {
+            'TRIANGLE ((0 0,1 0,0 0))', 'POLYHEDRALSURFACE EMPTY'] as $input) {
             yield $input => [$input];
         }
     }

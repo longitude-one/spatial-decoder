@@ -21,7 +21,7 @@ use LongitudeOne\SpatialDecoder\Strategy\Common\Lexer;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktPolygonFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktCoordinateReader;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor;
-use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
+use LongitudeOne\SpatialTypes\Interfaces\PolygonInterface;
 
 /**
  * Parses WKT polygon representations.
@@ -76,9 +76,9 @@ final class PolygonWktParser implements WktGeometryParserInterface
      *
      * @param CoordinateDimensionEnum|null $inheritedDimension dimension inherited from a parent collection
      *
-     * @return SpatialInterface the decoded polygon
+     * @return PolygonInterface the decoded polygon
      */
-    public function parse(?CoordinateDimensionEnum $inheritedDimension = null): SpatialInterface
+    public function parse(?CoordinateDimensionEnum $inheritedDimension = null): PolygonInterface
     {
         $dimension = $this->coordinateReader->consumeDimension($inheritedDimension);
         if ($this->cursor->isNextToken(Lexer::T_EMPTY)) {

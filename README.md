@@ -76,8 +76,18 @@ The shared WKT/EWKT lexer uses `SpatialTypeImplementationStatus` from
 keywords. `CIRCULARSTRING`, `COMPOUNDCURVE`, `CURVEPOLYGON`, `MULTICURVE`,
 `MULTISURFACE`, and `TIN` raise `NotYetImplementedException`. Non-instantiable
 enum types raise the decoder's `InvalidArgumentException`. Implemented types
-continue to the existing parsers; implementation in the spatial model does not
-by itself imply parser support (for example, `TRIANGLE` and `POLYHEDRALSURFACE`).
+continue to the representation-specific parsers. EWKT supports `POINT`,
+`LINESTRING`, `POLYGON`, `TRIANGLE`, `POLYHEDRALSURFACE`, `MULTIPOINT`,
+`MULTILINESTRING`, `MULTIPOLYGON`, and `GEOMETRYCOLLECTION`, including nested
+collections and supported EMPTY values. Standard WKT retains its existing
+geometry set and does not decode `TRIANGLE` or `POLYHEDRALSURFACE`.
+
+EWKT triangles support XY, XYZ, XYM, and XYZM. Polyhedral surfaces require XYZ
+or XYZM, including for EMPTY values; XY and XYM raise `InvalidArgumentException`,
+not `NotYetImplementedException`. Surface construction validates triangle rings
+and polyhedral patches using the spatial model constraints, reporting invalid
+structures through the decoder's `InvalidArgumentException`. Root SRID,
+coordinates, dimensions, and the geometry family are preserved recursively.
 
 Classification happens during lexical scanning, before grammar validation,
 including inside collections. A recognized unimplemented keyword therefore
