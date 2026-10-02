@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser;
 
+use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialDecoder\Strategy\Common\Lexer;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktGeometryCollectionFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktLineStringFactory;
@@ -44,6 +45,20 @@ final class WktParserFactory
     public function create(string $input): WktParser
     {
         $cursor = new WktTokenCursor($input);
+        if ($cursor->isNextToken(Lexer::T_SRID)) {
+            throw new InvalidArgumentException('WKT Strategy does not support SRID. Please use the Extended WKT Strategy.');
+        }
+
+        return $this->createFromCursor($cursor);
+    }
+
+    /**
+     * Create a geometry parser from a cursor positioned after any EWKT prefix.
+     *
+     * @param WktTokenCursor $cursor shared cursor positioned at the root geometry
+     */
+    public function createFromCursor(WktTokenCursor $cursor): WktParser
+    {
         $coordinateReader = new WktCoordinateReader($cursor);
         $pointFactory = new WktPointFactory();
         $lineStringFactory = new WktLineStringFactory($pointFactory);
