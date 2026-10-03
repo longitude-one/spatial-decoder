@@ -14,23 +14,25 @@
 
 declare(strict_types=1);
 
-namespace LongitudeOne\SpatialDecoder\Tests\Legacy;
+namespace LongitudeOne\SpatialDecoder\Tests\Legacy\EwktParser;
 
 use LongitudeOne\SpatialDecoder\Decoder;
 use LongitudeOne\SpatialDecoder\Strategy\EwktDecoderStrategy;
-use LongitudeOne\SpatialDecoder\Tests\Legacy\Utils\SpecificTestCase;
+use LongitudeOne\SpatialDecoder\Tests\Legacy\EwktParser\Utils\SpecificTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class CircularStringTest extends SpecificTestCase
 {
     private Decoder $parser;
 
+    /** Prepare the decoder before each test. */
     protected function setUp(): void
     {
         parent::setUp();
         $this->parser = new Decoder(new EwktDecoderStrategy());
     }
 
+    /** Release the decoder after each test. */
     protected function tearDown(): void
     {
         unset($this->parser);
@@ -38,12 +40,13 @@ class CircularStringTest extends SpecificTestCase
     }
 
     /**
-     * @return \Generator<string, array{0: string, 1: ?int, 2: (int|string)[][], 3: ?string}, null, void>
+     * @return \Generator<string, array{0: string, 1: ?int, 2: (float|int|string)[][], 3: ?string}, null, void>
      */
     public static function circularStringProvider(): \Generator
     {
         yield 'testCircularString' => ['CIRCULARSTRING(0 0, 1 1, 1 0)', null, [[0, 0], [1, 1], [1, 0]], null];
-        yield 'testCircularStringWithFloat' => ['CIRCULARSTRING(0.0 0.0, 1.1 1.1, 1.0 0.0)', null, [['0', '0'], ['1.1', '1.1'], ['1', '0']], null];
+        // This legacy test was updated because the decoder now maintains float values.
+        yield 'testCircularStringWithFloat' => ['CIRCULARSTRING(0.0 0.0, 1.1 1.1, 1.0 0.0)', null, [[0.0, 0.0], [1.1, 1.1], [1.0, 0.0]], null];
         yield 'testCircularStringWithSrid' => ['SRID=4326;CIRCULARSTRING(0 0, 1 1, 1 0)', 4326, [[0, 0], [1, 1], [1, 0]], null];
         yield 'testCircularStringWithZ' => ['CIRCULARSTRINGZ(0 0 0, 1 1 1, 1 0 -1)', null, [[0, 0, 0], [1, 1, 1], [1, 0, -1]], 'Z'];
         yield 'testCircularStringWithZAndSrid' => ['SRID=4326;CIRCULARSTRINGZ(0 0 0, 1 1 1, 1 0 -1)', 4326, [[0, 0, 0], [1, 1, 1], [1, 0, -1]], 'Z'];
@@ -54,12 +57,16 @@ class CircularStringTest extends SpecificTestCase
     }
 
     /**
-     * @param (int|string)[][] $coordinates
+     * Verify that CIRCULARSTRING values decode to the expected control points and metadata.
+     *
+     * @param string                 $value       EWKT value to decode
+     * @param int|null               $srid        Expected spatial reference identifier
+     * @param (float|int|string)[][] $coordinates Expected circular string coordinates
+     * @param string|null            $dimension   Expected coordinate dimension
      */
     #[DataProvider('circularStringProvider')]
     public function testCircularString(string $value, ?int $srid, array $coordinates, ?string $dimension): void
     {
-        /** @var array{type:string, value: (int|string)[][], srid: ?int, dimension: ?string} $actual */
         $actual = $this->parser->decode($value);
         self::assertCircularStringParsed($srid, $coordinates, $dimension, $actual);
     }

@@ -14,7 +14,7 @@
 
 declare(strict_types=1);
 
-namespace LongitudeOne\SpatialDecoder\Tests\Legacy;
+namespace LongitudeOne\SpatialDecoder\Tests\Legacy\EwktParser;
 
 use Doctrine\Common\Lexer\Token;
 use LongitudeOne\SpatialDecoder\Strategy\Common\Lexer;
@@ -133,6 +133,8 @@ class LexerTest extends TestCase
     }
 
     /**
+     * Verify that WKT geometry names, dimensions, numbers, and punctuation produce the expected tokens.
+     *
      * @param string                                       $value    WKT string to tokenize
      * @param array{0: int, 1: string|float|int, 2: int}[] $expected Expected token sequence
      */
@@ -153,7 +155,9 @@ class LexerTest extends TestCase
         }
     }
 
-    /** Tests token recognition with a reused lexer. */
+    /**
+     * Verify that reusing one lexer across inputs produces the same tokens as fresh lexer instances.
+     */
     public function testTokenRecognitionReuseLexer(): void
     {
         $lexer = new Lexer();

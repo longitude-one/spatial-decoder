@@ -14,23 +14,25 @@
 
 declare(strict_types=1);
 
-namespace LongitudeOne\SpatialDecoder\Tests\Legacy;
+namespace LongitudeOne\SpatialDecoder\Tests\Legacy\EwktParser;
 
 use LongitudeOne\SpatialDecoder\Decoder;
 use LongitudeOne\SpatialDecoder\Strategy\EwktDecoderStrategy;
-use LongitudeOne\SpatialDecoder\Tests\Legacy\Utils\SpecificTestCase;
+use LongitudeOne\SpatialDecoder\Tests\Legacy\EwktParser\Utils\SpecificTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class MultiPointTest extends SpecificTestCase
 {
     private Decoder $parser;
 
+    /** Prepare the decoder before each test. */
     protected function setUp(): void
     {
         parent::setUp();
         $this->parser = new Decoder(new EwktDecoderStrategy());
     }
 
+    /** Release the decoder after each test. */
     protected function tearDown(): void
     {
         unset($this->parser);
@@ -53,12 +55,16 @@ class MultiPointTest extends SpecificTestCase
     }
 
     /**
-     * @param (int|string)[][] $coordinates
+     * Verify that MULTIPOINT values decode to the expected points, SRID, and dimension.
+     *
+     * @param string           $value       EWKT value to decode
+     * @param int|null         $srid        Expected spatial reference identifier
+     * @param (int|string)[][] $coordinates Expected point coordinates
+     * @param string|null      $dimension   Expected coordinate dimension
      */
     #[DataProvider('multiPointProvider')]
     public function testMultiPoint(string $value, ?int $srid, array $coordinates, ?string $dimension): void
     {
-        /** @var array{type:string, value: (int|string)[][], srid: ?int, dimension: ?string} $actual */
         $actual = $this->parser->decode($value);
 
         self::assertMultiPointParsed($srid, $coordinates, $dimension, $actual);
