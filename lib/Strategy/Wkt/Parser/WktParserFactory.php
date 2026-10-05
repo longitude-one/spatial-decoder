@@ -18,6 +18,7 @@ namespace LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser;
 
 use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialDecoder\Strategy\Common\Lexer;
+use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktCircularStringFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktGeometryCollectionFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktLineStringFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktMultiLineStringFactory;
@@ -69,6 +70,10 @@ final class WktParserFactory
 
         $registry->register(Lexer::T_POINT, new PointWktParser($cursor, $coordinateReader, $pointFactory));
         $registry->register(Lexer::T_LINESTRING, new LineStringWktParser($cursor, $coordinateReader, $lineStringFactory));
+        $registry->register(
+            Lexer::T_CIRCULARSTRING,
+            new CircularStringWktParser($cursor, $coordinateReader, new WktCircularStringFactory($pointFactory))
+        );
         $registry->register(Lexer::T_MULTIPOINT, new MultiPointWktParser($cursor, $coordinateReader, new WktMultiPointFactory($pointFactory)));
         $registry->register(Lexer::T_MULTILINESTRING, new MultiLineStringWktParser($cursor, $coordinateReader, new WktMultiLineStringFactory($lineStringFactory)));
         $registry->register(Lexer::T_POLYGON, new PolygonWktParser($cursor, $coordinateReader, $polygonFactory));
@@ -78,7 +83,7 @@ final class WktParserFactory
         );
         $registry->register(
             Lexer::T_GEOMETRYCOLLECTION,
-            new GeometryCollectionWktParser($cursor, $coordinateReader, new WktGeometryCollectionFactory(), $registry)
+            new GeometryCollectionWktParser($cursor, $coordinateReader, new WktGeometryCollectionFactory(), $registry, $dialect)
         );
 
         if (WktDialect::EWKT === $dialect) {

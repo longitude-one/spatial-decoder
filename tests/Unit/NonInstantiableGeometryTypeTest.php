@@ -72,12 +72,12 @@ class NonInstantiableGeometryTypeTest extends TestCase
     public function testUnknownAndUnimplementedTypesRemainDistinct(): void
     {
         foreach ([new WktDecoderStrategy(), new EwktDecoderStrategy()] as $strategy) {
-            foreach (['UNKNOWN', 'CURVEUNKNOWN', 'GEOMETRYUNKNOWN', 'SURFACEUNKNOWN', 'SOLIDUNKNOWN', 'CIRCULARSTRING'] as $keyword) {
+            foreach (['UNKNOWN', 'CURVEUNKNOWN', 'GEOMETRYUNKNOWN', 'SURFACEUNKNOWN', 'SOLIDUNKNOWN', 'CURVEPOLYGON'] as $keyword) {
                 try {
                     $strategy->decode($keyword.' EMPTY');
                     self::fail('An unknown or unimplemented type must be rejected.');
                 } catch (DecoderExceptionInterface $exception) {
-                    self::assertSame('CIRCULARSTRING' === $keyword ? NotYetImplementedException::class : InvalidArgumentException::class, $exception::class);
+                    self::assertSame('CURVEPOLYGON' === $keyword ? NotYetImplementedException::class : InvalidArgumentException::class, $exception::class);
                 }
             }
         }

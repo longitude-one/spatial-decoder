@@ -20,6 +20,7 @@ use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
 use LongitudeOne\SpatialDecoder\Strategy\Common\Lexer;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktGeometryCollectionFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktCoordinateReader;
+use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktDialect;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 
@@ -37,12 +38,14 @@ final class GeometryCollectionWktParser implements WktGeometryParserInterface
      * @param WktCoordinateReader                  $coordinateReader reader for coordinate values and dimensions
      * @param WktGeometryCollectionFactory         $factory          factory for the decoded collection
      * @param WktGeometryParserDispatcherInterface $geometryParser   recursive geometry dispatcher
+     * @param WktDialect                           $dialect          dimensional syntax accepted by the representation
      */
     public function __construct(
         private WktTokenCursor $cursor,
         private WktCoordinateReader $coordinateReader,
         private WktGeometryCollectionFactory $factory,
-        private WktGeometryParserDispatcherInterface $geometryParser
+        private WktGeometryParserDispatcherInterface $geometryParser,
+        private WktDialect $dialect = WktDialect::WKT
     ) {
     }
 
@@ -56,6 +59,7 @@ final class GeometryCollectionWktParser implements WktGeometryParserInterface
     public function parse(?CoordinateDimensionEnum $inheritedDimension = null): SpatialInterface
     {
         $dimension = $this->coordinateReader->consumeDimension($inheritedDimension);
+        $declaredDimension = $dimension;
         if ($this->cursor->isNextToken(Lexer::T_EMPTY)) {
             $this->cursor->moveNext();
 
@@ -65,7 +69,8 @@ final class GeometryCollectionWktParser implements WktGeometryParserInterface
         $elements = [];
         $this->cursor->expectSymbol('(');
         do {
-            $element = $this->geometryParser->parseNext($dimension);
+            // A sibling's effective dimension is not an ancestor's WKT marker.
+            $element = $this->geometryParser->parseNext(WktDialect::EWKT === $this->dialect ? $dimension : $declaredDimension);
             $elementDimension = $this->dimensionOf($element);
             if (null !== $dimension && $dimension !== $elementDimension) {
                 throw $this->cursor->createInvalidInputException('WKT geometry-collection members must use one coordinate dimension.');
