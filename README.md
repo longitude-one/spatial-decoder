@@ -94,6 +94,30 @@ The spatial model implements the curve contract in clause 7.3.1, Description
 rules 4–12. This SQL/MM geometry is distinct from the OGC Simple Features
 geometry subset; EWKT remains a vendor extension.
 
+## CompoundCurve decoding
+
+WKT and EWKT decode `COMPOUNDCURVE` into `CompoundCurveInterface` objects,
+preserving each ordered linear or circular component without flattening or
+linearizing it. XY, XYZ, XYM, XYZM and EMPTY are supported, including inside
+geometry collections. Components share the containing curve's dimension.
+
+```php
+$curve = (new Decoder(new EwktDecoderStrategy()))
+    ->decode('SRID=4326;COMPOUNDCURVE ((0 0,1 1),CIRCULARSTRING (1 1,2 0,3 1))');
+// $curve->getCurve(0) is a LineStringInterface
+// $curve->getCurve(1) is a CircularStringInterface
+// $curve->getSrid() === 4326 (also applied to components and their points)
+```
+
+Linear components use parenthesized coordinates without a `LINESTRING` keyword;
+circular components use `CIRCULARSTRING`. This follows ISO/IEC CD
+13249-3:201x(E), the available 2009-01-16 Committee Draft, clause 5.1.57,
+`<single curve text>`. Typed `LINESTRING` components are rejected in both dialects.
+The existing WKT/EWKT dimension and SRID rules apply. Component continuity and
+other structural invariants are validated by `spatial-types`; disconnected or
+malformed curves raise the decoder's `InvalidArgumentException`, retaining the
+original exception when domain construction fails.
+
 ## Recognized types awaiting implementation
 
 `LongitudeOne\SpatialDecoder\Exception\NotYetImplementedException` is available
@@ -114,13 +138,11 @@ The shared WKT/EWKT lexer uses `SpatialTypeImplementationStatus` from
 keywords. `CURVEPOLYGON`, `MULTICURVE`,
 `MULTISURFACE`, and `TIN` raise `NotYetImplementedException`. Non-instantiable
 enum types raise `NonInstantiableGeometryTypeException`. Implemented types
-continue to the representation-specific parsers. `COMPOUNDCURVE` still raises
-`NotYetImplementedException` because decoder support is not implemented, even
-though the spatial model now provides it. EWKT supports `POINT`,
-`LINESTRING`, `CIRCULARSTRING`, `POLYGON`, `TRIANGLE`, `POLYHEDRALSURFACE`, `MULTIPOINT`,
+continue to the representation-specific parsers. EWKT supports `POINT`,
+`LINESTRING`, `CIRCULARSTRING`, `COMPOUNDCURVE`, `POLYGON`, `TRIANGLE`, `POLYHEDRALSURFACE`, `MULTIPOINT`,
 `MULTILINESTRING`, `MULTIPOLYGON`, and `GEOMETRYCOLLECTION`, including nested
 collections and supported EMPTY values. Standard WKT retains its existing
-geometry set, adds `CIRCULARSTRING`, and does not decode `TRIANGLE` or `POLYHEDRALSURFACE`.
+geometry set, adds `CIRCULARSTRING` and `COMPOUNDCURVE`, and does not decode `TRIANGLE` or `POLYHEDRALSURFACE`.
 
 EWKT triangles support XY, XYZ, XYM, and XYZM. Polyhedral surfaces require XYZ
 or XYZM, including for EMPTY values; XY and XYM raise `InvalidArgumentException`,

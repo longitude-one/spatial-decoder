@@ -19,6 +19,7 @@ namespace LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser;
 use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialDecoder\Strategy\Common\Lexer;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktCircularStringFactory;
+use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktCompoundCurveFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktGeometryCollectionFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktLineStringFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktMultiLineStringFactory;
@@ -73,6 +74,10 @@ final class WktParserFactory
         $registry->register(
             Lexer::T_CIRCULARSTRING,
             new CircularStringWktParser($cursor, $coordinateReader, new WktCircularStringFactory($pointFactory))
+        );
+        $registry->register(
+            Lexer::T_COMPOUNDCURVE,
+            new CompoundCurveWktParser($cursor, $coordinateReader, $lineStringFactory, new WktCompoundCurveFactory(), $registry)
         );
         $registry->register(Lexer::T_MULTIPOINT, new MultiPointWktParser($cursor, $coordinateReader, new WktMultiPointFactory($pointFactory)));
         $registry->register(Lexer::T_MULTILINESTRING, new MultiLineStringWktParser($cursor, $coordinateReader, new WktMultiLineStringFactory($lineStringFactory)));
