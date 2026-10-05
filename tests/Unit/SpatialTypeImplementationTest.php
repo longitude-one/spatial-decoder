@@ -44,7 +44,7 @@ class SpatialTypeImplementationTest extends TestCase
     /** @return iterable<string, array{GeometryTypeEnum}> */
     public static function missingTypes(): iterable
     {
-        foreach ([GeometryTypeEnum::CIRCULARSTRING, GeometryTypeEnum::COMPOUNDCURVE,
+        foreach ([GeometryTypeEnum::COMPOUNDCURVE,
             GeometryTypeEnum::CURVEPOLYGON, GeometryTypeEnum::MULTICURVE,
             GeometryTypeEnum::MULTISURFACE, GeometryTypeEnum::TIN] as $type) {
             yield $type->name => [$type];
@@ -54,7 +54,7 @@ class SpatialTypeImplementationTest extends TestCase
     /** Test all implemented geometry keywords remain available to parsers. */
     public function testImplementedTypesRemainLexerTokens(): void
     {
-        foreach ([GeometryTypeEnum::POINT, GeometryTypeEnum::LINESTRING, GeometryTypeEnum::POLYGON,
+        foreach ([GeometryTypeEnum::POINT, GeometryTypeEnum::LINESTRING, GeometryTypeEnum::CIRCULARSTRING, GeometryTypeEnum::POLYGON,
             GeometryTypeEnum::TRIANGLE, GeometryTypeEnum::POLYHEDRALSURFACE,
             GeometryTypeEnum::MULTIPOINT, GeometryTypeEnum::MULTILINESTRING,
             GeometryTypeEnum::MULTIPOLYGON, GeometryTypeEnum::GEOMETRYCOLLECTION] as $type) {
@@ -86,7 +86,7 @@ class SpatialTypeImplementationTest extends TestCase
     {
         $this->expectException(NotYetImplementedException::class);
 
-        (new WktDecoderStrategy())->decode('CIRCULARSTRING (garbage)');
+        (new WktDecoderStrategy())->decode('CURVEPOLYGON (garbage)');
     }
 
     /**

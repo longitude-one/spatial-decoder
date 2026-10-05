@@ -56,6 +56,37 @@ geometry type or parser extension. It preserves supported SRIDs without applying
 PostGIS-specific SRID normalization. The [PostGIS grammar](https://github.com/postgis/postgis/blob/master/liblwgeom/lwin_wkt_parse.y)
 places its optional SRID at the root; EWKT is a vendor extension, not OGC WKT.
 
+## CircularString decoding
+
+WKT and EWKT decode `CIRCULARSTRING` into dimension-specific
+`CircularStringInterface` objects. The ordered control points are preserved
+without linearizing the curve. XY, XYZ, XYM, XYZM and EMPTY are supported,
+including inside geometry collections.
+
+```php
+$curve = (new Decoder(new EwktDecoderStrategy()))
+    ->decode('SRID=4326;CIRCULARSTRING (0 0,1 1,2 0,3 -1,4 0)');
+// $curve->toArray() === [[0, 0], [1, 1], [2, 0], [3, -1], [4, 0]]
+// $curve->getSrid() === 4326
+```
+
+The existing dialect rules apply: WKT requires separated dimension markers
+for non-XY coordinates and rejects SRID prefixes; EWKT also accepts compact
+markers and infers XYZ/XYZM from unmarked coordinates. EMPTY preserves its
+explicit or inherited dimension, defaulting to XY otherwise.
+
+Non-empty curves require an odd number of at least three control points.
+Closed circles and collinear arcs are accepted. Structural validation is
+provided by `spatial-types`; invalid input raises the decoder's
+`InvalidArgumentException`, retaining the original exception when domain
+construction fails.
+
+Circular-string WKT syntax is based on ISO/IEC CD 13249-3:201x(E), the available
+2009-01-16 Committee Draft, clause 5.1.57 (grammar and Description 1(e)).
+The spatial model implements the curve contract in clause 7.3.1, Description
+rules 4–12. This SQL/MM geometry is distinct from the OGC Simple Features
+geometry subset; EWKT remains a vendor extension.
+
 ## Recognized types awaiting implementation
 
 `LongitudeOne\SpatialDecoder\Exception\NotYetImplementedException` is available
@@ -63,7 +94,7 @@ for strategies that recognize a valid spatial type whose spatial object cannot
 yet be instantiated. Construct it with the recognized `GeometryTypeEnum` value:
 
 ```php
-throw new \LongitudeOne\SpatialDecoder\Exception\NotYetImplementedException(\LongitudeOne\Core\Enum\GeometryTypeEnum::CIRCULARSTRING);
+throw new \LongitudeOne\SpatialDecoder\Exception\NotYetImplementedException(\LongitudeOne\Core\Enum\GeometryTypeEnum::CURVEPOLYGON);
 ```
 
 The exception implements `DecoderExceptionInterface` and extends `\RuntimeException`.
@@ -72,15 +103,17 @@ identifies that type and states that decoding is not yet implemented. It is
 independent of the input format.
 
 The shared WKT/EWKT lexer uses `SpatialTypeImplementationStatus` from
-`longitude-one/spatial-types` **0.0.1-alpha.4** to classify recognized geometry
-keywords. `CIRCULARSTRING`, `COMPOUNDCURVE`, `CURVEPOLYGON`, `MULTICURVE`,
+`longitude-one/spatial-types` **1.0.0-beta** to classify recognized geometry
+keywords. `CURVEPOLYGON`, `MULTICURVE`,
 `MULTISURFACE`, and `TIN` raise `NotYetImplementedException`. Non-instantiable
 enum types raise `NonInstantiableGeometryTypeException`. Implemented types
-continue to the representation-specific parsers. EWKT supports `POINT`,
-`LINESTRING`, `POLYGON`, `TRIANGLE`, `POLYHEDRALSURFACE`, `MULTIPOINT`,
+continue to the representation-specific parsers. `COMPOUNDCURVE` still raises
+`NotYetImplementedException` because decoder support is not implemented, even
+though the spatial model now provides it. EWKT supports `POINT`,
+`LINESTRING`, `CIRCULARSTRING`, `POLYGON`, `TRIANGLE`, `POLYHEDRALSURFACE`, `MULTIPOINT`,
 `MULTILINESTRING`, `MULTIPOLYGON`, and `GEOMETRYCOLLECTION`, including nested
 collections and supported EMPTY values. Standard WKT retains its existing
-geometry set and does not decode `TRIANGLE` or `POLYHEDRALSURFACE`.
+geometry set, adds `CIRCULARSTRING`, and does not decode `TRIANGLE` or `POLYHEDRALSURFACE`.
 
 EWKT triangles support XY, XYZ, XYM, and XYZM. Polyhedral surfaces require XYZ
 or XYZM, including for EMPTY values; XY and XYM raise `InvalidArgumentException`,
