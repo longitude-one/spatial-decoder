@@ -44,8 +44,7 @@ class SpatialTypeImplementationTest extends TestCase
     /** @return iterable<string, array{GeometryTypeEnum}> */
     public static function missingTypes(): iterable
     {
-        foreach ([GeometryTypeEnum::COMPOUNDCURVE,
-            GeometryTypeEnum::CURVEPOLYGON, GeometryTypeEnum::MULTICURVE,
+        foreach ([GeometryTypeEnum::CURVEPOLYGON, GeometryTypeEnum::MULTICURVE,
             GeometryTypeEnum::MULTISURFACE, GeometryTypeEnum::TIN] as $type) {
             yield $type->name => [$type];
         }
@@ -54,7 +53,7 @@ class SpatialTypeImplementationTest extends TestCase
     /** Test all implemented geometry keywords remain available to parsers. */
     public function testImplementedTypesRemainLexerTokens(): void
     {
-        foreach ([GeometryTypeEnum::POINT, GeometryTypeEnum::LINESTRING, GeometryTypeEnum::CIRCULARSTRING, GeometryTypeEnum::POLYGON,
+        foreach ([GeometryTypeEnum::POINT, GeometryTypeEnum::LINESTRING, GeometryTypeEnum::CIRCULARSTRING, GeometryTypeEnum::COMPOUNDCURVE, GeometryTypeEnum::POLYGON,
             GeometryTypeEnum::TRIANGLE, GeometryTypeEnum::POLYHEDRALSURFACE,
             GeometryTypeEnum::MULTIPOINT, GeometryTypeEnum::MULTILINESTRING,
             GeometryTypeEnum::MULTIPOLYGON, GeometryTypeEnum::GEOMETRYCOLLECTION] as $type) {

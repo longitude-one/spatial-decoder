@@ -80,8 +80,7 @@ class EwktGeometryCoverageTest extends TestCase
     /** @return iterable<string, array{GeometryTypeEnum}> */
     public static function unimplementedTypes(): iterable
     {
-        foreach ([GeometryTypeEnum::COMPOUNDCURVE,
-            GeometryTypeEnum::CURVEPOLYGON, GeometryTypeEnum::MULTICURVE,
+        foreach ([GeometryTypeEnum::CURVEPOLYGON, GeometryTypeEnum::MULTICURVE,
             GeometryTypeEnum::MULTISURFACE, GeometryTypeEnum::TIN] as $type) {
             yield $type->name => [$type];
         }

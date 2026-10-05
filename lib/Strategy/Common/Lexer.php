@@ -189,8 +189,7 @@ class Lexer extends AbstractLexer
                 throw new NonInstantiableGeometryTypeException($geometryType);
             }
 
-            // Compound curves are available in the model but still await decoder support.
-            if (GeometryTypeEnum::COMPOUNDCURVE === $geometryType || !SpatialTypeImplementationStatus::isFullyImplemented($geometryType)) {
+            if (!SpatialTypeImplementationStatus::isFullyImplemented($geometryType)) {
                 throw new NotYetImplementedException($geometryType);
             }
         }
