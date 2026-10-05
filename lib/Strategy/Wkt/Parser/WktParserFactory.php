@@ -83,7 +83,7 @@ final class WktParserFactory
         );
         $registry->register(
             Lexer::T_GEOMETRYCOLLECTION,
-            new GeometryCollectionWktParser($cursor, $coordinateReader, new WktGeometryCollectionFactory(), $registry)
+            new GeometryCollectionWktParser($cursor, $coordinateReader, new WktGeometryCollectionFactory(), $registry, $dialect)
         );
 
         if (WktDialect::EWKT === $dialect) {

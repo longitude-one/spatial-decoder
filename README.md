@@ -75,6 +75,13 @@ for non-XY coordinates and rejects SRID prefixes; EWKT also accepts compact
 markers and infers XYZ/XYZM from unmarked coordinates. EMPTY preserves its
 explicit or inherited dimension, defaulting to XY otherwise.
 
+In WKT collections, a member may inherit a dimension marker from an explicitly
+marked ancestor collection, but never from a preceding sibling. This also
+applies to nested collections and EMPTY members. For example,
+`GEOMETRYCOLLECTION (POINT Z EMPTY,CIRCULARSTRING (0 0 2,1 1 3,2 0 4))`
+is rejected by WKT; declare `GEOMETRYCOLLECTION Z` or mark the curve `Z`.
+EWKT retains its existing dimension inference and collection propagation.
+
 Non-empty curves require an odd number of at least three control points.
 Closed circles and collinear arcs are accepted. Structural validation is
 provided by `spatial-types`; invalid input raises the decoder's
