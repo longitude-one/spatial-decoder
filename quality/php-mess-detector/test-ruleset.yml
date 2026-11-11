@@ -1,0 +1,15 @@
+# PHPMD configuration, see https://phpmd.org/documentation/creating-a-ruleset.html
+name: 'Longitude One rule set for tests'
+description: 'Longitude One rule set for tests.'
+rules:
+  - ref: rulesets/cleancode.xml
+    exclude:
+      - StaticAccess
+  - ref: rulesets/codesize.xml
+    exclude:
+      - TooManyPublicMethods
+      - TooManyMethods
+      - ExcessiveMethodLength
+  - ref: rulesets/controversial.xml
+  - ref: rulesets/design.xml
+  - ref: rulesets/unusedcode.xml

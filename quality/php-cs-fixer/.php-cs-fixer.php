@@ -60,6 +60,9 @@ return $config
         '@PHP8x4Migration' => true,
         '@PHP8x4Migration:risky' => true,
 
+        // PHP Unit Version
+        '@PHPUnit11x0Migration:risky' => true,
+
         // Headers
         'header_comment' => [
             'comment_type' => 'PHPDoc',
