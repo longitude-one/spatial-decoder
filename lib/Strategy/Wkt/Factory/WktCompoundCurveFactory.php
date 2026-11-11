@@ -19,12 +19,12 @@ namespace LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory;
 use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
 use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialTypes\Exception\SpatialTypeExceptionInterface;
-use LongitudeOne\SpatialTypes\Interfaces\CompoundCurveInterface;
-use LongitudeOne\SpatialTypes\Interfaces\CurveInterface;
-use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\CompoundCurve as CompoundCurve2D;
-use LongitudeOne\SpatialTypes\Types\Dimension3m\Geometry\CompoundCurve as CompoundCurve3DM;
-use LongitudeOne\SpatialTypes\Types\Dimension3z\Geometry\CompoundCurve as CompoundCurve3DZ;
-use LongitudeOne\SpatialTypes\Types\Dimension4zm\Geometry\CompoundCurve as CompoundCurve4D;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutableCompoundCurveInterface;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutableCurveInterface;
+use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\CompoundCurveImmutable as CompoundCurve2D;
+use LongitudeOne\SpatialTypes\Types\Dimension3m\Geometry\CompoundCurveImmutable as CompoundCurve3DM;
+use LongitudeOne\SpatialTypes\Types\Dimension3z\Geometry\CompoundCurveImmutable as CompoundCurve3DZ;
+use LongitudeOne\SpatialTypes\Types\Dimension4zm\Geometry\CompoundCurveImmutable as CompoundCurve4D;
 
 /**
  * Creates dimension-specific WKT compound curves.
@@ -36,10 +36,10 @@ final class WktCompoundCurveFactory
     /**
      * Create a compound curve from its dimension and ordered components.
      *
-     * @param CoordinateDimensionEnum $dimension coordinate dimension of the compound curve
-     * @param CurveInterface[]        $curves    ordered line-string and circular-string components
+     * @param CoordinateDimensionEnum   $dimension coordinate dimension of the compound curve
+     * @param ImmutableCurveInterface[] $curves    ordered line-string and circular-string components
      */
-    public function createCompoundCurve(CoordinateDimensionEnum $dimension, array $curves): CompoundCurveInterface
+    public function createCompoundCurve(CoordinateDimensionEnum $dimension, array $curves): ImmutableCompoundCurveInterface
     {
         try {
             return match ($dimension) {

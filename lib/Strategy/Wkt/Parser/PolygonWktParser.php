@@ -21,7 +21,7 @@ use LongitudeOne\SpatialDecoder\Strategy\Common\Lexer;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktPolygonFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktCoordinateReader;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor;
-use LongitudeOne\SpatialTypes\Interfaces\PolygonInterface;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutablePolygonInterface;
 
 /**
  * Parses WKT polygon representations.
@@ -57,7 +57,6 @@ final class PolygonWktParser implements WktGeometryParserInterface
         $this->cursor->expectSymbol('(');
         do {
             [$dimension, $coordinates] = $this->coordinateReader->consumeCoordinateSequence($dimension);
-            $this->assertRing($coordinates);
             $rings[] = $coordinates;
 
             $hasNextRing = $this->cursor->isNextToken(Lexer::T_COMMA);
@@ -76,9 +75,9 @@ final class PolygonWktParser implements WktGeometryParserInterface
      *
      * @param CoordinateDimensionEnum|null $inheritedDimension dimension inherited from a parent collection
      *
-     * @return PolygonInterface the decoded polygon
+     * @return ImmutablePolygonInterface the decoded polygon
      */
-    public function parse(?CoordinateDimensionEnum $inheritedDimension = null): PolygonInterface
+    public function parse(?CoordinateDimensionEnum $inheritedDimension = null): ImmutablePolygonInterface
     {
         $dimension = $this->coordinateReader->consumeDimension($inheritedDimension);
         if ($this->cursor->isNextToken(Lexer::T_EMPTY)) {
@@ -90,17 +89,5 @@ final class PolygonWktParser implements WktGeometryParserInterface
         [$dimension, $rings] = $this->consumePolygon($dimension);
 
         return $this->factory->createPolygon($dimension ?? CoordinateDimensionEnum::XY, $rings);
-    }
-
-    /**
-     * Ensure that a coordinate sequence forms a closed linear ring.
-     *
-     * @param list<list<float|int>> $coordinates ordered ring coordinates
-     */
-    private function assertRing(array $coordinates): void
-    {
-        if (\count($coordinates) < 4 || $coordinates[0] != $coordinates[\count($coordinates) - 1]) {
-            throw $this->cursor->createInvalidInputException('A WKT polygon ring must contain at least four coordinates and be closed.');
-        }
     }
 }

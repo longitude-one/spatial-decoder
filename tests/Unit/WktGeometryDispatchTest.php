@@ -19,7 +19,7 @@ namespace LongitudeOne\SpatialDecoder\Tests\Unit;
 use LongitudeOne\Core\Diagnostic\DiagnosticValueFormatter;
 use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialDecoder\Strategy\WktDecoderStrategy;
-use LongitudeOne\SpatialTypes\Types\Dimension4zm\Geometry\Point;
+use LongitudeOne\SpatialTypes\Types\Dimension4zm\Geometry\PointImmutable as Point;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 

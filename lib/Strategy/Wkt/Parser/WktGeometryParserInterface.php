@@ -17,7 +17,7 @@ declare(strict_types=1);
 namespace LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser;
 
 use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
-use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutableSpatialInterface;
 
 /**
  * Parses one geometry body from the shared WKT token stream.
@@ -31,7 +31,7 @@ interface WktGeometryParserInterface
      *
      * @param CoordinateDimensionEnum|null $inheritedDimension dimension inherited from a parent collection
      *
-     * @return SpatialInterface the decoded geometry
+     * @return ImmutableSpatialInterface the decoded geometry
      */
-    public function parse(?CoordinateDimensionEnum $inheritedDimension = null): SpatialInterface;
+    public function parse(?CoordinateDimensionEnum $inheritedDimension = null): ImmutableSpatialInterface;
 }

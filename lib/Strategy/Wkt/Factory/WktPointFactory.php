@@ -18,11 +18,11 @@ namespace LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory;
 
 use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
 use LongitudeOne\SpatialDecoder\Exception\LogicException;
-use LongitudeOne\SpatialTypes\Interfaces\PointInterface;
-use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\Point as Point2D;
-use LongitudeOne\SpatialTypes\Types\Dimension3m\Geometry\Point as Point3DM;
-use LongitudeOne\SpatialTypes\Types\Dimension3z\Geometry\Point as Point3DZ;
-use LongitudeOne\SpatialTypes\Types\Dimension4zm\Geometry\Point as Point4D;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutablePointInterface;
+use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\PointImmutable as Point2D;
+use LongitudeOne\SpatialTypes\Types\Dimension3m\Geometry\PointImmutable as Point3DM;
+use LongitudeOne\SpatialTypes\Types\Dimension3z\Geometry\PointImmutable as Point3DZ;
+use LongitudeOne\SpatialTypes\Types\Dimension4zm\Geometry\PointImmutable as Point4D;
 
 /**
  * Creates dimension-specific WKT points.
@@ -36,9 +36,9 @@ final class WktPointFactory
      *
      * @param CoordinateDimensionEnum $dimension coordinate dimension of the point
      *
-     * @return PointInterface the created empty point
+     * @return ImmutablePointInterface the created empty point
      */
-    public function createEmptyPoint(CoordinateDimensionEnum $dimension): PointInterface
+    public function createEmptyPoint(CoordinateDimensionEnum $dimension): ImmutablePointInterface
     {
         return match ($dimension) {
             CoordinateDimensionEnum::XY => new Point2D(),
@@ -54,7 +54,7 @@ final class WktPointFactory
      * @param CoordinateDimensionEnum $dimension coordinate dimension of the point
      * @param list<float|int>         $ordinates ordered point ordinates
      */
-    public function createPoint(CoordinateDimensionEnum $dimension, array $ordinates): PointInterface
+    public function createPoint(CoordinateDimensionEnum $dimension, array $ordinates): ImmutablePointInterface
     {
         return match ($dimension) {
             CoordinateDimensionEnum::XY => new Point2D($this->ordinateAt($ordinates, 0), $this->ordinateAt($ordinates, 1)),

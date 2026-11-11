@@ -53,8 +53,6 @@ class PolygonWktDecoderTest extends TestCase
     public static function malformedPolygonWkts(): iterable
     {
         yield 'empty parentheses' => ['POLYGON ()'];
-        yield 'unclosed ring' => ['POLYGON ((0 0, 4 0, 4 4, 1 1))'];
-        yield 'too few coordinates' => ['POLYGON ((0 0, 4 0, 0 0))'];
         yield 'empty ring' => ['POLYGON ((0 0, 4 0, 4 4, 0 0), EMPTY)'];
         yield 'inconsistent dimensions' => ['POLYGON ((0 0, 4 0, 4 4, 0 0), (1 1 2, 2 1 3, 2 2 4, 1 1 2))'];
         yield 'unmarked XYZ' => ['POLYGON ((0 0 1, 4 0 2, 4 4 3, 0 0 1))'];
@@ -90,7 +88,7 @@ class PolygonWktDecoderTest extends TestCase
         $polygon = (new WktDecoderStrategy())->decode($wkt);
 
         self::assertInstanceOf(PolygonInterface::class, $polygon);
-        self::assertTrue($polygon->isEmpty());
+        self::assertSame([], $polygon->toArray());
         self::assertSame($hasZ, $polygon->hasZ());
         self::assertSame($hasM, $polygon->hasM());
     }

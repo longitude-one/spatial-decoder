@@ -23,9 +23,9 @@ use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktCompoundCurveFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktLineStringFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktCoordinateReader;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor;
-use LongitudeOne\SpatialTypes\Interfaces\CircularStringInterface;
-use LongitudeOne\SpatialTypes\Interfaces\CurveInterface;
-use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutableCircularStringInterface;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutableCurveInterface;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutableSpatialInterface;
 
 /**
  * Parses WKT compound-curve representations.
@@ -57,9 +57,9 @@ final class CompoundCurveWktParser implements WktGeometryParserInterface
      *
      * @param CoordinateDimensionEnum|null $inheritedDimension dimension inherited from a parent collection
      *
-     * @return SpatialInterface the decoded compound curve
+     * @return ImmutableSpatialInterface the decoded compound curve
      */
-    public function parse(?CoordinateDimensionEnum $inheritedDimension = null): SpatialInterface
+    public function parse(?CoordinateDimensionEnum $inheritedDimension = null): ImmutableSpatialInterface
     {
         $dimension = $this->coordinateReader->consumeDimension($inheritedDimension);
         if ($this->cursor->isNextToken(Lexer::T_EMPTY)) {
@@ -90,9 +90,9 @@ final class CompoundCurveWktParser implements WktGeometryParserInterface
      *
      * @param CoordinateDimensionEnum|null $dimension compound-curve dimension established by its parent or first component
      *
-     * @return CurveInterface the decoded component
+     * @return ImmutableCurveInterface the decoded component
      */
-    private function parseComponent(?CoordinateDimensionEnum $dimension): CurveInterface
+    private function parseComponent(?CoordinateDimensionEnum $dimension): ImmutableCurveInterface
     {
         if ($this->cursor->isNextToken(Lexer::T_OPEN_PARENTHESIS)) {
             [$dimension, $coordinates] = $this->coordinateReader->consumeCoordinateSequence($dimension);
@@ -108,9 +108,9 @@ final class CompoundCurveWktParser implements WktGeometryParserInterface
      *
      * @param CoordinateDimensionEnum|null $dimension compound-curve dimension established by its parent or first component
      *
-     * @return CurveInterface the decoded component
+     * @return ImmutableCurveInterface the decoded component
      */
-    private function parseTypedComponent(?CoordinateDimensionEnum $dimension): CurveInterface
+    private function parseTypedComponent(?CoordinateDimensionEnum $dimension): ImmutableCurveInterface
     {
         $token = $this->cursor->currentToken();
         if (null === $token || Lexer::T_CIRCULARSTRING !== $token->type) {
@@ -121,7 +121,7 @@ final class CompoundCurveWktParser implements WktGeometryParserInterface
         if (null !== $dimension && $curve->getDimension() !== $dimension) {
             throw $this->cursor->createInvalidInputException('Compound-curve components must use the compound-curve coordinate dimension.');
         }
-        if (GeometryTypeEnum::CIRCULARSTRING === $curve->getType() && $curve instanceof CircularStringInterface) {
+        if (GeometryTypeEnum::CIRCULARSTRING === $curve->getType() && $curve instanceof ImmutableCircularStringInterface) {
             return $curve;
         }
 

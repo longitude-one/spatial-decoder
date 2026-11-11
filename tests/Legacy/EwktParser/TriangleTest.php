@@ -17,7 +17,6 @@ declare(strict_types=1);
 namespace LongitudeOne\SpatialDecoder\Tests\Legacy\EwktParser;
 
 use LongitudeOne\SpatialDecoder\Decoder;
-use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialDecoder\Strategy\EwktDecoderStrategy;
 use LongitudeOne\SpatialDecoder\Tests\Legacy\EwktParser\Utils\SpecificTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -40,51 +39,29 @@ class TriangleTest extends SpecificTestCase
         parent::tearDown();
     }
 
-    /**
-     * This method provide triangles with not enough points or too much points.
-     *
-     * @return \Generator<string, array{0: string, 1: string}, null, void>
-     */
-    public static function badNumberPointsProvider(): \Generator
+    /** @return iterable<string, array{string, list<list<int|float>>}> */
+    public static function geometricallyInvalidTriangles(): iterable
     {
-        // With 1 point
-        yield 'testParsingTriangleWith1Point' => ['TRIANGLE((34.23 -87))', 'A non-empty WKT line string must contain at least two coordinates. Invalid WKT input: "TRIANGLE((34.23 -87))".'];
-        yield 'testParsingTriangleZWith1Point' => ['TRIANGLEZ((34.23 -87 33))', 'A non-empty WKT line string must contain at least two coordinates. Invalid WKT input: "TRIANGLEZ((34.23 -87 33))".'];
-        yield 'testParsingTriangleMWith1Point' => ['TRIANGLEM((34.23 -87 10))', 'A non-empty WKT line string must contain at least two coordinates. Invalid WKT input: "TRIANGLEM((34.23 -87 10))".'];
-        yield 'testParsingTriangleZMWith1Point' => ['TRIANGLEZM((34.23 -87 10 20))', 'A non-empty WKT line string must contain at least two coordinates. Invalid WKT input: "TRIANGLEZM((34.23 -87 10 20))".'];
-
-        // With 2 points
-        yield 'testParsingTriangleWith2Points' => ['TRIANGLE((34.23 -87, 45.3 -92))', 'A WKT polygon ring must contain at least four coordinates and be closed. Invalid WKT input: "TRIANGLE((34.23 -87, 45.3 -92))".'];
-        yield 'testParsingTriangleZWith2Points' => ['TRIANGLEZ((34.23 -87 33, 45.3 -92 22))', 'A WKT polygon ring must contain at least four coordinates and be closed. Invalid WKT input: "TRIANGLEZ((34.23 -87 33, 45.3 -92 22))".'];
-        yield 'testParsingTriangleMWith2Points' => ['TRIANGLEM((34.23 -87 10, 45.3 -92 10))', 'A WKT polygon ring must contain at least four coordinates and be closed. Invalid WKT input: "TRIANGLEM((34.23 -87 10, 45.3 -92 10))".'];
-        yield 'testParsingTriangleZMWith2Points' => ['TRIANGLEZM((34.23 -87 10 20, 45.3 -92 10 20))', 'A WKT polygon ring must contain at least four coordinates and be closed. Invalid WKT input: "TRIANGLEZM((34.23 -87 10 20, 45.3 -92 10 20))".'];
-
-        // With 3 points
-        yield 'testParsingTriangleWith3Points' => ['TRIANGLE((34.23 -87, 45.3 -92, 10 10))', 'A WKT polygon ring must contain at least four coordinates and be closed. Invalid WKT input: "TRIANGLE((34.23 -87, 45.3 -92, 10 10))".'];
-        yield 'testParsingTriangleZWith3Points' => ['TRIANGLEZ((34.23 -87 33, 45.3 -92 22, 10 10 11))', 'A WKT polygon ring must contain at least four coordinates and be closed. Invalid WKT input: "TRIANGLEZ((34.23 -87 33, 45.3 -92 22, 10 10 11))".'];
-        yield 'testParsingTriangleMWith3Points' => ['TRIANGLEM((34.23 -87 10, 45.3 -92 10, 10 10 11))', 'A WKT polygon ring must contain at least four coordinates and be closed. Invalid WKT input: "TRIANGLEM((34.23 -87 10, 45.3 -92 10, 10 10 11))".'];
-        yield 'testParsingTriangleZMWith3Points' => ['TRIANGLEZM((34.23 -87 10 20, 45.3 -92 10 20, 10 11 12 13))', 'A WKT polygon ring must contain at least four coordinates and be closed. Invalid WKT input: "TRIANGLEZM((34.23 -87 10 20, 45.3 -92 10 20, 10 11 12 13))".'];
-
-        // With 5 points
-        yield 'testParsingTriangleWith5Points' => ['TRIANGLE((34.23 -87, 45.3 -92, 10 10, 34.23 -87, 45.3 -92))', 'A WKT polygon ring must contain at least four coordinates and be closed. Invalid WKT input: "TRIANGLE((34.23 -87, 45.3 -92, 10 10, 34.23 -87, 45.3 -92))".'];
-        yield 'testParsingTriangleZWith5Points' => ['TRIANGLEZ((34.23 -87 33, 45.3 -92 22, 10 10 11, 34.23 -87 33, 45.3 -92 22))', 'A WKT polygon ring must contain at least four coordinates and be closed. Invalid WKT input: "TRIANGLEZ((34.23 -87 33, 45.3 -92 22, 10 10 11, 34.23 -87 33, 45.3 -92 22))".'];
-        yield 'testParsingTriangleMWith5Points' => ['TRIANGLEM((34.23 -87 10, 45.3 -92 10, 10 10 11, 34.23 -87 10, 45.3 -92 10))', 'A WKT polygon ring must contain at least four coordinates and be closed. Invalid WKT input: "TRIANGLEM((34.23 -87 10, 45.3 -92 10, 10 10 11, 34.23 -87 10, 45.3 -92 10))".'];
-        yield 'testParsingTriangleZMWith5Points' => ['TRIANGLEZM((34.23 -87 10 20, 45.3 -92 10 20, 10 11 12 13, 34.23 -87 10 20, 45.3 -92 10 20))', 'A WKT polygon ring must contain at least four coordinates and be closed. Invalid WKT input: "TRIANGLEZM((34.23 -87 10 20, 45.3 -92 10 20, 10 11 12 13, 34.23 -87 10 20, 45.3 -92 10 20))".'];
-    }
-
-    /**
-     * This method provide not closed triangles.
-     * According to the ISO-13249 specification, a triangle is a closed ring with fourth points.
-     * Last point shall be the same as the first one.
-     *
-     * @return \Generator<string, array{0: string}, null, void>
-     */
-    public static function notClosedTriangleProvider(): \Generator
-    {
-        yield 'testParsingTriangleWithNotClosedRing' => ['TRIANGLE((34.23 -87, 45.3 -92, 10 10, 0 0))', 'A WKT polygon ring must contain at least four coordinates and be closed. Invalid WKT input: "TRIANGLE((34.23 -87, 45.3 -92, 10 10, 0 0))".'];
-        yield 'testParsingTriangleZWithNotClosedRing' => ['TRIANGLEZ((34.23 -87 33, 45.3 -92 22, 10 10 11, 0 0 0))', 'A WKT polygon ring must contain at least four coordinates and be closed. Invalid WKT input: "TRIANGLEZ((34.23 -87 33, 45.3 -92 22, 10 10 11, 0 0 0))".'];
-        yield 'testParsingTriangleMWithNotClosedRing' => ['TRIANGLEM((34.23 -87 10, 45.3 -92 10, 10 10 11, 0 0 0))', 'A WKT polygon ring must contain at least four coordinates and be closed. Invalid WKT input: "TRIANGLEM((34.23 -87 10, 45.3 -92 10, 10 10 11, 0 0 0))".'];
-        yield 'testParsingTriangleZMWithNotClosedRing' => ['TRIANGLEZM((34.23 -87 10 20, 45.3 -92 10 20, 10 11 12 13, 0 0 0 0))', 'A WKT polygon ring must contain at least four coordinates and be closed. Invalid WKT input: "TRIANGLEZM((34.23 -87 10 20, 45.3 -92 10 20, 10 11 12 13, 0 0 0 0))".'];
+        yield 'testParsingTriangleWith1Point' => ['TRIANGLE((34.23 -87))', [[34.23, -87]]];
+        yield 'testParsingTriangleZWith1Point' => ['TRIANGLEZ((34.23 -87 33))', [[34.23, -87, 33]]];
+        yield 'testParsingTriangleMWith1Point' => ['TRIANGLEM((34.23 -87 10))', [[34.23, -87, 10]]];
+        yield 'testParsingTriangleZMWith1Point' => ['TRIANGLEZM((34.23 -87 10 20))', [[34.23, -87, 10, 20]]];
+        yield 'testParsingTriangleWith2Points' => ['TRIANGLE((34.23 -87, 45.3 -92))', [[34.23, -87], [45.3, -92]]];
+        yield 'testParsingTriangleZWith2Points' => ['TRIANGLEZ((34.23 -87 33, 45.3 -92 22))', [[34.23, -87, 33], [45.3, -92, 22]]];
+        yield 'testParsingTriangleMWith2Points' => ['TRIANGLEM((34.23 -87 10, 45.3 -92 10))', [[34.23, -87, 10], [45.3, -92, 10]]];
+        yield 'testParsingTriangleZMWith2Points' => ['TRIANGLEZM((34.23 -87 10 20, 45.3 -92 10 20))', [[34.23, -87, 10, 20], [45.3, -92, 10, 20]]];
+        yield 'testParsingTriangleWith3Points' => ['TRIANGLE((34.23 -87, 45.3 -92, 10 10))', [[34.23, -87], [45.3, -92], [10, 10]]];
+        yield 'testParsingTriangleZWith3Points' => ['TRIANGLEZ((34.23 -87 33, 45.3 -92 22, 10 10 11))', [[34.23, -87, 33], [45.3, -92, 22], [10, 10, 11]]];
+        yield 'testParsingTriangleMWith3Points' => ['TRIANGLEM((34.23 -87 10, 45.3 -92 10, 10 10 11))', [[34.23, -87, 10], [45.3, -92, 10], [10, 10, 11]]];
+        yield 'testParsingTriangleZMWith3Points' => ['TRIANGLEZM((34.23 -87 10 20, 45.3 -92 10 20, 10 11 12 13))', [[34.23, -87, 10, 20], [45.3, -92, 10, 20], [10, 11, 12, 13]]];
+        yield 'testParsingTriangleWith5Points' => ['TRIANGLE((34.23 -87, 45.3 -92, 10 10, 34.23 -87, 45.3 -92))', [[34.23, -87], [45.3, -92], [10, 10], [34.23, -87], [45.3, -92]]];
+        yield 'testParsingTriangleZWith5Points' => ['TRIANGLEZ((34.23 -87 33, 45.3 -92 22, 10 10 11, 34.23 -87 33, 45.3 -92 22))', [[34.23, -87, 33], [45.3, -92, 22], [10, 10, 11], [34.23, -87, 33], [45.3, -92, 22]]];
+        yield 'testParsingTriangleMWith5Points' => ['TRIANGLEM((34.23 -87 10, 45.3 -92 10, 10 10 11, 34.23 -87 10, 45.3 -92 10))', [[34.23, -87, 10], [45.3, -92, 10], [10, 10, 11], [34.23, -87, 10], [45.3, -92, 10]]];
+        yield 'testParsingTriangleZMWith5Points' => ['TRIANGLEZM((34.23 -87 10 20, 45.3 -92 10 20, 10 11 12 13, 34.23 -87 10 20, 45.3 -92 10 20))', [[34.23, -87, 10, 20], [45.3, -92, 10, 20], [10, 11, 12, 13], [34.23, -87, 10, 20], [45.3, -92, 10, 20]]];
+        yield 'testParsingTriangleWithNotClosedRing' => ['TRIANGLE((34.23 -87, 45.3 -92, 10 10, 0 0))', [[34.23, -87], [45.3, -92], [10, 10], [0, 0]]];
+        yield 'testParsingTriangleZWithNotClosedRing' => ['TRIANGLEZ((34.23 -87 33, 45.3 -92 22, 10 10 11, 0 0 0))', [[34.23, -87, 33], [45.3, -92, 22], [10, 10, 11], [0, 0, 0]]];
+        yield 'testParsingTriangleMWithNotClosedRing' => ['TRIANGLEM((34.23 -87 10, 45.3 -92 10, 10 10 11, 0 0 0))', [[34.23, -87, 10], [45.3, -92, 10], [10, 10, 11], [0, 0, 0]]];
+        yield 'testParsingTriangleZMWithNotClosedRing' => ['TRIANGLEZM((34.23 -87 10 20, 45.3 -92 10 20, 10 11 12 13, 0 0 0 0))', [[34.23, -87, 10, 20], [45.3, -92, 10, 20], [10, 11, 12, 13], [0, 0, 0, 0]]];
     }
 
     /**
@@ -103,31 +80,17 @@ class TriangleTest extends SpecificTestCase
     }
 
     /**
-     * Reject triangles with an unsupported number of points.
+     * Preserve geometric errors for explicit validation by the caller.
      *
-     * @param string $actualValue     EWKT triangle to reject
-     * @param string $expectedMessage Expected exception message
+     * @param string                $input       EWKT triangle to decode
+     * @param list<list<int|float>> $coordinates original ring coordinates
      */
-    #[DataProvider('badNumberPointsProvider')]
-    public function testBadNumberPoints(string $actualValue, string $expectedMessage): void
+    #[DataProvider('geometricallyInvalidTriangles')]
+    public function testPreservesGeometricallyInvalidTriangle(string $input, array $coordinates): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessageIsOrContains($expectedMessage);
-        $this->parser->decode($actualValue);
-    }
-
-    /**
-     * Reject triangles whose rings are not closed.
-     *
-     * @param string $actualValue     EWKT triangle to reject
-     * @param string $expectedMessage Expected exception message
-     */
-    #[DataProvider('notClosedTriangleProvider')]
-    public function testNotClosedTriangle(string $actualValue, string $expectedMessage): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessageIsOrContains($expectedMessage);
-        $this->parser->decode($actualValue);
+        $actual = $this->parser->decode($input);
+        self::assertSame('TRIANGLE', strtoupper($actual->getType()->value));
+        self::assertSame([$coordinates], $actual->toArray());
     }
 
     /**

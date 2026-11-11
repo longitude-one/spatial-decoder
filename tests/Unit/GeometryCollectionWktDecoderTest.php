@@ -97,7 +97,7 @@ class GeometryCollectionWktDecoderTest extends TestCase
     {
         $collection = $this->decodeCollection($wkt);
 
-        self::assertTrue($collection->isEmpty());
+        self::assertSame([], $collection->toArray());
         self::assertSame($hasZ, $collection->hasZ());
         self::assertSame($hasM, $collection->hasM());
     }

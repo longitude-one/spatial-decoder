@@ -17,7 +17,7 @@ declare(strict_types=1);
 namespace LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser;
 
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor;
-use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutableSpatialInterface;
 
 /**
  * Dispatches supported WKT geometry types to their parsers.
@@ -39,7 +39,7 @@ final class WktParser
     /**
      * Parse a geometry from the supported WKT subset.
      */
-    public function parse(): SpatialInterface
+    public function parse(): ImmutableSpatialInterface
     {
         $geometry = $this->registry->parseNext(null);
         $this->cursor->assertEnd();

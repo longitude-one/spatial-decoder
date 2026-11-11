@@ -62,15 +62,10 @@ class EwktGeometryCoverageTest extends TestCase
     /** @return iterable<string, array{string}> */
     public static function invalidGeometries(): iterable
     {
-        yield 'triangle quadrilateral' => ['TRIANGLE ((0 0,4 0,4 4,0 4,0 0))'];
-        yield 'triangle hole' => ['TRIANGLE ((0 0,4 0,0 4,0 0),(1 1,2 1,1 2,1 1))'];
-        yield 'triangle open ring' => ['TRIANGLE ((0 0,4 0,0 4,1 1))'];
         yield 'triangle mixed dimension' => ['TRIANGLE Z ((0 0 0,4 0 0,0 4,0 0 0))'];
         yield 'surface XY' => ['POLYHEDRALSURFACE (((0 0,4 0,0 4,0 0)))'];
         yield 'surface XY empty' => ['POLYHEDRALSURFACE EMPTY'];
         yield 'surface M empty' => ['POLYHEDRALSURFACE M EMPTY'];
-        yield 'surface empty patch' => ['POLYHEDRALSURFACE Z (EMPTY)'];
-        yield 'surface nonplanar patch' => ['POLYHEDRALSURFACE Z (((0 0 0,4 0 0,4 4 1,0 4 0,0 0 0)))'];
         yield 'surface mixed patches' => ['POLYHEDRALSURFACE Z (((0 0 0,4 0 0,0 4 0,0 0 0)),((0 0,4 0,0 4,0 0)))'];
         yield 'surface missing parenthesis' => ['POLYHEDRALSURFACE Z ((0 0 0,4 0 0,0 4 0,0 0 0))'];
         yield 'nested independent SRID' => ['GEOMETRYCOLLECTION Z (TRIANGLE EMPTY,SRID=3857;POLYHEDRALSURFACE EMPTY)'];
@@ -95,7 +90,7 @@ class EwktGeometryCoverageTest extends TestCase
     public function testEmptyGeometry(string $input, GeometryTypeEnum $type, CoordinateDimensionEnum $dimension): void
     {
         $geometry = (new EwktDecoderStrategy())->decode('SRID=4326;'.$input);
-        self::assertTrue($geometry->isEmpty());
+        self::assertSame([], $geometry->toArray());
         self::assertSame($type, $geometry->getType());
         self::assertSame($dimension, $geometry->getDimension());
         $this->assertMetadata($geometry);

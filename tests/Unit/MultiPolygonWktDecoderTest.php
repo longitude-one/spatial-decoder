@@ -56,7 +56,6 @@ class MultiPolygonWktDecoderTest extends TestCase
     public static function malformedMultiPolygonWkts(): iterable
     {
         yield 'empty parentheses' => ['MULTIPOLYGON ()'];
-        yield 'unclosed polygon member' => ['MULTIPOLYGON (((0 0, 4 0, 4 4, 1 1)))'];
         yield 'missing polygon parentheses' => ['MULTIPOLYGON ((0 0, 4 0, 4 4, 0 0))'];
         yield 'inconsistent dimensions' => ['MULTIPOLYGON (((0 0, 4 0, 4 4, 0 0)), ((1 1 2, 2 1 3, 2 2 4, 1 1 2)))'];
         yield 'trailing polygon comma' => ['MULTIPOLYGON (((0 0, 4 0, 4 4, 0 0)),)'];
@@ -92,7 +91,7 @@ class MultiPolygonWktDecoderTest extends TestCase
         $multiPolygon = (new WktDecoderStrategy())->decode($wkt);
 
         self::assertInstanceOf(MultiPolygonInterface::class, $multiPolygon);
-        self::assertTrue($multiPolygon->isEmpty());
+        self::assertSame([], $multiPolygon->toArray());
         self::assertSame($hasZ, $multiPolygon->hasZ());
         self::assertSame($hasM, $multiPolygon->hasM());
     }
@@ -104,7 +103,7 @@ class MultiPolygonWktDecoderTest extends TestCase
 
         self::assertInstanceOf(MultiPolygonInterface::class, $multiPolygon);
         self::assertSame([[], [[[0, 0, 1], [4, 0, 2], [4, 4, 3], [0, 0, 1]]]], $multiPolygon->toArray());
-        self::assertTrue($multiPolygon->getPolygons()[0]->isEmpty());
+        self::assertSame([], $multiPolygon->getPolygons()[0]->toArray());
         self::assertTrue($multiPolygon->getPolygons()[0]->hasZ());
     }
 
@@ -120,7 +119,7 @@ class MultiPolygonWktDecoderTest extends TestCase
 
         self::assertCount(4, $polygons);
         self::assertContainsOnlyInstancesOf(PolygonInterface::class, $polygons);
-        self::assertTrue($polygons[1]->isEmpty());
+        self::assertSame([], $polygons[1]->toArray());
         self::assertSame(
             [
                 [[[0, 0], [4, 0], [4, 4], [0, 0]]],

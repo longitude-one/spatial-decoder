@@ -12,7 +12,30 @@ This library provides five strategies for decoding spatial data from different f
 
 Feel free to provide additional strategies for decoding other formats into spatial interfaces.
 
-See the [strategy guide](docs/strategies.md) for a comparison of the five formats, usage examples, implementation limitations, and links to reference documentation.
+## Decoding and geometric validation
+
+WKT and EWKT return immutable Geometry objects from `spatial-types`
+**1.0.0-RC.1**, including immutable collection members. The output is independent
+of the shared `SpatialFactory::mutable()` / `SpatialFactory::immutable()` mode.
+The decoder and custom strategy interfaces continue to use `SpatialInterface`;
+the built-in text strategies return `ImmutableSpatialInterface`.
+
+The decoder checks representation syntax, numeric ordinates, coordinate dimensions
+and supported geometry types. Geometric validity is checked separately by the
+application after decoding. For example, single-point line strings, unclosed
+polygon rings, incomplete circular arcs, disconnected compound curves and
+nonplanar surface patches are preserved as supplied.
+
+```php
+$polygon = (new Decoder(new WktDecoderStrategy()))
+    ->decode('POLYGON ((0 0,4 0,4 4,1 1))');
+// $polygon->toArray() === [[[0, 0], [4, 0], [4, 4], [1, 1]]]
+// Validate the geometry explicitly before using it in operations requiring validity.
+```
+
+Malformed representations such as `POLYGON ((0 0,))` still raise the decoder's
+`InvalidArgumentException`. Empty parentheses are rejected; use `EMPTY` where
+supported by the format.
 
 ## EWKT decoding
 
@@ -82,17 +105,14 @@ applies to nested collections and EMPTY members. For example,
 is rejected by WKT; declare `GEOMETRYCOLLECTION Z` or mark the curve `Z`.
 EWKT retains its existing dimension inference and collection propagation.
 
-Non-empty curves require an odd number of at least three control points.
-Closed circles and collinear arcs are accepted. Structural validation is
-provided by `spatial-types`; invalid input raises the decoder's
-`InvalidArgumentException`, retaining the original exception when domain
-construction fails.
+Control-point count and arc validity are left to explicit application
+validation. The decoder preserves the supplied control points, including
+incomplete arcs, closed circles and collinear points.
 
 Circular-string WKT syntax is based on ISO/IEC CD 13249-3:201x(E), the available
 2009-01-16 Committee Draft, clause 5.1.57 (grammar and Description 1(e)).
-The spatial model implements the curve contract in clause 7.3.1, Description
-rules 4–12. This SQL/MM geometry is distinct from the OGC Simple Features
-geometry subset; EWKT remains a vendor extension.
+This SQL/MM geometry is distinct from the OGC Simple Features geometry subset;
+EWKT remains a vendor extension.
 
 ## CompoundCurve decoding
 
@@ -114,9 +134,9 @@ circular components use `CIRCULARSTRING`. This follows ISO/IEC CD
 13249-3:201x(E), the available 2009-01-16 Committee Draft, clause 5.1.57,
 `<single curve text>`. Typed `LINESTRING` components are rejected in both dialects.
 The existing WKT/EWKT dimension and SRID rules apply. Component continuity and
-other structural invariants are validated by `spatial-types`; disconnected or
-malformed curves raise the decoder's `InvalidArgumentException`, retaining the
-original exception when domain construction fails.
+geometric validity are left to explicit application validation. Disconnected
+components and empty circular components are preserved; malformed component
+syntax raises the decoder's `InvalidArgumentException`.
 
 ## Recognized types awaiting implementation
 
@@ -134,7 +154,7 @@ identifies that type and states that decoding is not yet implemented. It is
 independent of the input format.
 
 The shared WKT/EWKT lexer uses `SpatialTypeImplementationStatus` from
-`longitude-one/spatial-types` **1.0.0-beta** to classify recognized geometry
+`longitude-one/spatial-types` **1.0.0-RC.1** to classify recognized geometry
 keywords. `CURVEPOLYGON`, `MULTICURVE`,
 `MULTISURFACE`, and `TIN` raise `NotYetImplementedException`. Non-instantiable
 enum types raise `NonInstantiableGeometryTypeException`. Implemented types
@@ -146,10 +166,9 @@ geometry set, adds `CIRCULARSTRING` and `COMPOUNDCURVE`, and does not decode `TR
 
 EWKT triangles support XY, XYZ, XYM, and XYZM. Polyhedral surfaces require XYZ
 or XYZM, including for EMPTY values; XY and XYM raise `InvalidArgumentException`,
-not `NotYetImplementedException`. Surface construction validates triangle rings
-and polyhedral patches using the spatial model constraints, reporting invalid
-structures through the decoder's `InvalidArgumentException`. Root SRID,
-coordinates, dimensions, and the geometry family are preserved recursively.
+not `NotYetImplementedException`. Triangle rings and polyhedral patches are
+preserved without checking their geometric validity. Root SRID, coordinates,
+dimensions, and the geometry family are preserved recursively.
 
 Classification happens during lexical scanning, before grammar validation,
 including inside collections. A recognized unimplemented keyword therefore

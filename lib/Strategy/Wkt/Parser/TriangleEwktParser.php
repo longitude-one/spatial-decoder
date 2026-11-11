@@ -19,11 +19,11 @@ namespace LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser;
 use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
 use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialTypes\Exception\SpatialTypeExceptionInterface;
-use LongitudeOne\SpatialTypes\Interfaces\TriangleInterface;
-use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\Triangle as TriangleXY;
-use LongitudeOne\SpatialTypes\Types\Dimension3m\Geometry\Triangle as TriangleXYM;
-use LongitudeOne\SpatialTypes\Types\Dimension3z\Geometry\Triangle as TriangleXYZ;
-use LongitudeOne\SpatialTypes\Types\Dimension4zm\Geometry\Triangle as TriangleXYZM;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutableTriangleInterface;
+use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\TriangleImmutable as TriangleXY;
+use LongitudeOne\SpatialTypes\Types\Dimension3m\Geometry\TriangleImmutable as TriangleXYM;
+use LongitudeOne\SpatialTypes\Types\Dimension3z\Geometry\TriangleImmutable as TriangleXYZ;
+use LongitudeOne\SpatialTypes\Types\Dimension4zm\Geometry\TriangleImmutable as TriangleXYZM;
 
 /**
  * Decode an EWKT triangle using the shared polygonal grammar.
@@ -42,11 +42,11 @@ final class TriangleEwktParser implements WktGeometryParserInterface
     }
 
     /**
-     * Parse and validate the concrete surface before returning it.
+     * Parse the surface representation without checking geometric validity.
      *
      * @param CoordinateDimensionEnum|null $inheritedDimension dimension inherited from a collection
      */
-    public function parse(?CoordinateDimensionEnum $inheritedDimension = null): TriangleInterface
+    public function parse(?CoordinateDimensionEnum $inheritedDimension = null): ImmutableTriangleInterface
     {
         $geometry = $this->parser->parse($inheritedDimension);
 

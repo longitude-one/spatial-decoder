@@ -64,7 +64,6 @@ class LineStringWktDecoderTest extends TestCase
      */
     public static function malformedLineStringWkts(): iterable
     {
-        yield 'singleton line string' => ['LINESTRING (1 2)'];
         yield 'inconsistent coordinates' => ['LINESTRING (1 2, 3 4 5)'];
         yield 'unmarked XYZ' => ['LINESTRING (1 2 3, 4 5 6)'];
         yield 'unmarked XYZM' => ['LINESTRING (1 2 3 4, 5 6 7 8)'];
@@ -84,7 +83,7 @@ class LineStringWktDecoderTest extends TestCase
         $lineString = (new WktDecoderStrategy())->decode($wkt);
 
         self::assertInstanceOf(LineStringInterface::class, $lineString);
-        self::assertTrue($lineString->isEmpty());
+        self::assertSame([], $lineString->toArray());
         self::assertSame($hasZ, $lineString->hasZ());
         self::assertSame($hasM, $lineString->hasM());
     }

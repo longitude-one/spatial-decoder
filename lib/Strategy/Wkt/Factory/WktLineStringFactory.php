@@ -17,12 +17,12 @@ declare(strict_types=1);
 namespace LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory;
 
 use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
-use LongitudeOne\SpatialTypes\Interfaces\LineStringInterface;
-use LongitudeOne\SpatialTypes\Interfaces\PointInterface;
-use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\LineString as LineString2D;
-use LongitudeOne\SpatialTypes\Types\Dimension3m\Geometry\LineString as LineString3DM;
-use LongitudeOne\SpatialTypes\Types\Dimension3z\Geometry\LineString as LineString3DZ;
-use LongitudeOne\SpatialTypes\Types\Dimension4zm\Geometry\LineString as LineString4D;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutableLineStringInterface;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutablePointInterface;
+use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\LineStringImmutable as LineString2D;
+use LongitudeOne\SpatialTypes\Types\Dimension3m\Geometry\LineStringImmutable as LineString3DM;
+use LongitudeOne\SpatialTypes\Types\Dimension3z\Geometry\LineStringImmutable as LineString3DZ;
+use LongitudeOne\SpatialTypes\Types\Dimension4zm\Geometry\LineStringImmutable as LineString4D;
 
 /**
  * Creates dimension-specific WKT line strings.
@@ -46,11 +46,11 @@ final class WktLineStringFactory
      * @param CoordinateDimensionEnum $dimension   coordinate dimension of the line string
      * @param list<list<float|int>>   $coordinates ordered line-string coordinates
      */
-    public function createLineString(CoordinateDimensionEnum $dimension, array $coordinates): LineStringInterface
+    public function createLineString(CoordinateDimensionEnum $dimension, array $coordinates): ImmutableLineStringInterface
     {
         // Build dimension-specific points before assembling the line string.
         $points = array_map(
-            fn (array $ordinates): PointInterface => $this->pointFactory->createPoint($dimension, $ordinates),
+            fn (array $ordinates): ImmutablePointInterface => $this->pointFactory->createPoint($dimension, $ordinates),
             $coordinates
         );
 

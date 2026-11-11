@@ -22,7 +22,7 @@ use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktGeometryCollectionFactor
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktCoordinateReader;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktDialect;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor;
-use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutableSpatialInterface;
 
 /**
  * Parses recursively nested WKT geometry collections.
@@ -54,9 +54,9 @@ final class GeometryCollectionWktParser implements WktGeometryParserInterface
      *
      * @param CoordinateDimensionEnum|null $inheritedDimension collection dimension inherited from a parent
      *
-     * @return SpatialInterface the decoded geometry collection
+     * @return ImmutableSpatialInterface the decoded geometry collection
      */
-    public function parse(?CoordinateDimensionEnum $inheritedDimension = null): SpatialInterface
+    public function parse(?CoordinateDimensionEnum $inheritedDimension = null): ImmutableSpatialInterface
     {
         $dimension = $this->coordinateReader->consumeDimension($inheritedDimension);
         $declaredDimension = $dimension;
@@ -92,11 +92,11 @@ final class GeometryCollectionWktParser implements WktGeometryParserInterface
     /**
      * Resolve a spatial object's coordinate layout.
      *
-     * @param SpatialInterface $spatial spatial object to inspect
+     * @param ImmutableSpatialInterface $spatial spatial object to inspect
      *
      * @return CoordinateDimensionEnum the object's coordinate dimension
      */
-    private function dimensionOf(SpatialInterface $spatial): CoordinateDimensionEnum
+    private function dimensionOf(ImmutableSpatialInterface $spatial): CoordinateDimensionEnum
     {
         return match (true) {
             $spatial->hasZ() && $spatial->hasM() => CoordinateDimensionEnum::XYZM,

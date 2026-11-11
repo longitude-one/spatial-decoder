@@ -17,12 +17,12 @@ declare(strict_types=1);
 namespace LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory;
 
 use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
-use LongitudeOne\SpatialTypes\Interfaces\LineStringInterface;
-use LongitudeOne\SpatialTypes\Interfaces\PolygonInterface;
-use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\Polygon as Polygon2D;
-use LongitudeOne\SpatialTypes\Types\Dimension3m\Geometry\Polygon as Polygon3DM;
-use LongitudeOne\SpatialTypes\Types\Dimension3z\Geometry\Polygon as Polygon3DZ;
-use LongitudeOne\SpatialTypes\Types\Dimension4zm\Geometry\Polygon as Polygon4D;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutableLineStringInterface;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutablePolygonInterface;
+use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\PolygonImmutable as Polygon2D;
+use LongitudeOne\SpatialTypes\Types\Dimension3m\Geometry\PolygonImmutable as Polygon3DM;
+use LongitudeOne\SpatialTypes\Types\Dimension3z\Geometry\PolygonImmutable as Polygon3DZ;
+use LongitudeOne\SpatialTypes\Types\Dimension4zm\Geometry\PolygonImmutable as Polygon4D;
 
 /**
  * Creates dimension-specific WKT polygons.
@@ -46,10 +46,10 @@ final class WktPolygonFactory
      * @param CoordinateDimensionEnum     $dimension coordinate dimension of the polygon
      * @param list<list<list<float|int>>> $rings     ordered ring coordinates
      */
-    public function createPolygon(CoordinateDimensionEnum $dimension, array $rings): PolygonInterface
+    public function createPolygon(CoordinateDimensionEnum $dimension, array $rings): ImmutablePolygonInterface
     {
         $lineStrings = array_map(
-            fn (array $coordinates): LineStringInterface => $this->lineStringFactory->createLineString($dimension, $coordinates),
+            fn (array $coordinates): ImmutableLineStringInterface => $this->lineStringFactory->createLineString($dimension, $coordinates),
             $rings
         );
 

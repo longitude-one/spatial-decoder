@@ -83,7 +83,7 @@ class CollectionDimensionDialectTest extends TestCase
             self::assertSame($dimension, $curve->getDimension());
             self::assertSame($coordinates, $curve->toArray());
             self::assertSame($dimension, $empty->getDimension());
-            self::assertTrue($empty->isEmpty());
+            self::assertSame([], $empty->toArray());
             self::assertSame(4326, $curve->getSrid());
             self::assertSame(4326, $empty->getSrid());
         }
@@ -114,7 +114,7 @@ class CollectionDimensionDialectTest extends TestCase
                 self::assertSame($dimension, $curve->getDimension());
                 self::assertSame($coordinates, $curve->toArray());
                 self::assertSame($dimension, $empty->getDimension());
-                self::assertTrue($empty->isEmpty());
+                self::assertSame([], $empty->toArray());
             }
         }
     }

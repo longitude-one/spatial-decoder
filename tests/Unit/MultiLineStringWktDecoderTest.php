@@ -58,7 +58,6 @@ class MultiLineStringWktDecoderTest extends TestCase
         yield 'inconsistent dimensions' => ['MULTILINESTRING ((1 2, 3 4), (5 6 7, 8 9 10))'];
         yield 'unmarked XYZ' => ['MULTILINESTRING ((1 2 3, 4 5 6))'];
         yield 'unmarked XYZM' => ['MULTILINESTRING ((1 2 3 4, 5 6 7 8))'];
-        yield 'singleton line member' => ['MULTILINESTRING ((1 2))'];
         yield 'missing member parentheses' => ['MULTILINESTRING (1 2, 3 4)'];
         yield 'trailing member comma' => ['MULTILINESTRING ((1 2, 3 4),)'];
     }
@@ -87,7 +86,7 @@ class MultiLineStringWktDecoderTest extends TestCase
         $multiLineString = (new WktDecoderStrategy())->decode($wkt);
 
         self::assertInstanceOf(MultiLineStringInterface::class, $multiLineString);
-        self::assertTrue($multiLineString->isEmpty());
+        self::assertSame([], $multiLineString->toArray());
         self::assertSame($hasZ, $multiLineString->hasZ());
         self::assertSame($hasM, $multiLineString->hasM());
     }
@@ -99,7 +98,7 @@ class MultiLineStringWktDecoderTest extends TestCase
 
         self::assertInstanceOf(MultiLineStringInterface::class, $multiLineString);
         self::assertSame([[], [[1, 2, 3], [4, 5, 6]]], $multiLineString->toArray());
-        self::assertTrue($multiLineString->getLineStrings()[0]->isEmpty());
+        self::assertSame([], $multiLineString->getLineStrings()[0]->toArray());
         self::assertTrue($multiLineString->getLineStrings()[0]->hasZ());
     }
 

@@ -113,7 +113,7 @@ class PointWktDecoderTest extends TestCase
         $point = (new WktDecoderStrategy())->decode($wkt);
 
         self::assertInstanceOf(PointInterface::class, $point);
-        self::assertTrue($point->isEmpty());
+        self::assertSame([], $point->toArray());
         self::assertSame($hasZ, $point->hasZ());
         self::assertSame($hasM, $point->hasM());
 
