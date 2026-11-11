@@ -17,12 +17,12 @@ declare(strict_types=1);
 namespace LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory;
 
 use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
-use LongitudeOne\SpatialTypes\Interfaces\MultiPolygonInterface;
-use LongitudeOne\SpatialTypes\Interfaces\PolygonInterface;
-use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\MultiPolygon as MultiPolygon2D;
-use LongitudeOne\SpatialTypes\Types\Dimension3m\Geometry\MultiPolygon as MultiPolygon3DM;
-use LongitudeOne\SpatialTypes\Types\Dimension3z\Geometry\MultiPolygon as MultiPolygon3DZ;
-use LongitudeOne\SpatialTypes\Types\Dimension4zm\Geometry\MultiPolygon as MultiPolygon4D;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutableMultiPolygonInterface;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutablePolygonInterface;
+use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\MultiPolygonImmutable as MultiPolygon2D;
+use LongitudeOne\SpatialTypes\Types\Dimension3m\Geometry\MultiPolygonImmutable as MultiPolygon3DM;
+use LongitudeOne\SpatialTypes\Types\Dimension3z\Geometry\MultiPolygonImmutable as MultiPolygon3DZ;
+use LongitudeOne\SpatialTypes\Types\Dimension4zm\Geometry\MultiPolygonImmutable as MultiPolygon4D;
 
 /**
  * Creates dimension-specific WKT multi-polygons.
@@ -46,10 +46,10 @@ final class WktMultiPolygonFactory
      * @param CoordinateDimensionEnum           $dimension coordinate dimension of the multi-polygon
      * @param list<list<list<list<float|int>>>> $polygons  ordered polygon coordinates
      */
-    public function createMultiPolygon(CoordinateDimensionEnum $dimension, array $polygons): MultiPolygonInterface
+    public function createMultiPolygon(CoordinateDimensionEnum $dimension, array $polygons): ImmutableMultiPolygonInterface
     {
         $members = array_map(
-            fn (array $rings): PolygonInterface => $this->polygonFactory->createPolygon($dimension, $rings),
+            fn (array $rings): ImmutablePolygonInterface => $this->polygonFactory->createPolygon($dimension, $rings),
             $polygons
         );
 

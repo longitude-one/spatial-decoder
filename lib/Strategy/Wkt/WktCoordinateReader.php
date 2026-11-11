@@ -79,9 +79,6 @@ final class WktCoordinateReader
         }
 
         $this->cursor->expectSymbol(')');
-        if (\count($coordinates) < 2) {
-            throw $this->cursor->createInvalidInputException('A non-empty WKT line string must contain at least two coordinates.');
-        }
 
         return [$dimension, $coordinates];
     }

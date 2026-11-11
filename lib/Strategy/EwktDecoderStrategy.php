@@ -21,7 +21,7 @@ use LongitudeOne\SpatialDecoder\Strategy\Common\Lexer;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\WktParserFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktDialect;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor;
-use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutableSpatialInterface;
 
 /**
  * Decode supported EWKT geometries with an optional root spatial reference.
@@ -33,7 +33,7 @@ final class EwktDecoderStrategy implements StringDecoderStrategyInterface
      *
      * @param string $data EWKT text to decode
      */
-    public function decode(string $data): SpatialInterface
+    public function decode(string $data): ImmutableSpatialInterface
     {
         $cursor = new WktTokenCursor($data);
         if (!$cursor->isNextToken(Lexer::T_SRID)) {

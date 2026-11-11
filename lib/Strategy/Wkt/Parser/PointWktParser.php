@@ -21,7 +21,7 @@ use LongitudeOne\SpatialDecoder\Strategy\Common\Lexer;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory\WktPointFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktCoordinateReader;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor;
-use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutableSpatialInterface;
 
 /**
  * Parses WKT point representations.
@@ -49,9 +49,9 @@ final class PointWktParser implements WktGeometryParserInterface
      *
      * @param CoordinateDimensionEnum|null $inheritedDimension dimension inherited from a parent collection
      *
-     * @return SpatialInterface the decoded point
+     * @return ImmutableSpatialInterface the decoded point
      */
-    public function parse(?CoordinateDimensionEnum $inheritedDimension = null): SpatialInterface
+    public function parse(?CoordinateDimensionEnum $inheritedDimension = null): ImmutableSpatialInterface
     {
         $dimension = $this->coordinateReader->consumeDimension($inheritedDimension);
         if ($this->cursor->isNextToken(Lexer::T_EMPTY)) {

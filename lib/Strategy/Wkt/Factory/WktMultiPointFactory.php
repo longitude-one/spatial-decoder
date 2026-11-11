@@ -17,12 +17,12 @@ declare(strict_types=1);
 namespace LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory;
 
 use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
-use LongitudeOne\SpatialTypes\Interfaces\MultiPointInterface;
-use LongitudeOne\SpatialTypes\Interfaces\PointInterface;
-use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\MultiPoint as MultiPoint2D;
-use LongitudeOne\SpatialTypes\Types\Dimension3m\Geometry\MultiPoint as MultiPoint3DM;
-use LongitudeOne\SpatialTypes\Types\Dimension3z\Geometry\MultiPoint as MultiPoint3DZ;
-use LongitudeOne\SpatialTypes\Types\Dimension4zm\Geometry\MultiPoint as MultiPoint4D;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutableMultiPointInterface;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutablePointInterface;
+use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\MultiPointImmutable as MultiPoint2D;
+use LongitudeOne\SpatialTypes\Types\Dimension3m\Geometry\MultiPointImmutable as MultiPoint3DM;
+use LongitudeOne\SpatialTypes\Types\Dimension3z\Geometry\MultiPointImmutable as MultiPoint3DZ;
+use LongitudeOne\SpatialTypes\Types\Dimension4zm\Geometry\MultiPointImmutable as MultiPoint4D;
 
 /**
  * Creates dimension-specific WKT multi-points.
@@ -46,10 +46,10 @@ final class WktMultiPointFactory
      * @param CoordinateDimensionEnum $dimension coordinate dimension of the multi-point
      * @param list<list<float|int>>   $points    ordered point ordinates; an empty list represents an empty point member
      */
-    public function createMultiPoint(CoordinateDimensionEnum $dimension, array $points): MultiPointInterface
+    public function createMultiPoint(CoordinateDimensionEnum $dimension, array $points): ImmutableMultiPointInterface
     {
         $members = array_map(
-            fn (array $ordinates): PointInterface => [] === $ordinates
+            fn (array $ordinates): ImmutablePointInterface => [] === $ordinates
                 ? $this->pointFactory->createEmptyPoint($dimension)
                 : $this->pointFactory->createPoint($dimension, $ordinates),
             $points

@@ -17,7 +17,7 @@ declare(strict_types=1);
 namespace LongitudeOne\SpatialDecoder\Strategy;
 
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\WktParserFactory;
-use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutableSpatialInterface;
 
 /**
  * Decode supported Well-Known Text representations.
@@ -29,9 +29,9 @@ final class WktDecoderStrategy implements StringDecoderStrategyInterface
      *
      * @param string $data the WKT data to decode
      *
-     * @return SpatialInterface the decoded spatial data
+     * @return ImmutableSpatialInterface the decoded spatial data
      */
-    public function decode(string $data): SpatialInterface
+    public function decode(string $data): ImmutableSpatialInterface
     {
         return (new WktParserFactory())->create($data)->parse();
     }

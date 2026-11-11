@@ -86,7 +86,7 @@ class MultiPointWktDecoderTest extends TestCase
         $multiPoint = (new WktDecoderStrategy())->decode($wkt);
 
         self::assertInstanceOf(MultiPointInterface::class, $multiPoint);
-        self::assertTrue($multiPoint->isEmpty());
+        self::assertSame([], $multiPoint->toArray());
         self::assertSame($hasZ, $multiPoint->hasZ());
         self::assertSame($hasM, $multiPoint->hasM());
     }

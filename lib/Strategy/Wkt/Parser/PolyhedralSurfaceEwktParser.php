@@ -19,9 +19,9 @@ namespace LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser;
 use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
 use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialTypes\Exception\SpatialTypeExceptionInterface;
-use LongitudeOne\SpatialTypes\Interfaces\PolyhedralSurfaceInterface;
-use LongitudeOne\SpatialTypes\Types\Dimension3z\Geometry\PolyhedralSurface as PolyhedralSurfaceXYZ;
-use LongitudeOne\SpatialTypes\Types\Dimension4zm\Geometry\PolyhedralSurface as PolyhedralSurfaceXYZM;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutablePolyhedralSurfaceInterface;
+use LongitudeOne\SpatialTypes\Types\Dimension3z\Geometry\PolyhedralSurfaceImmutable as PolyhedralSurfaceXYZ;
+use LongitudeOne\SpatialTypes\Types\Dimension4zm\Geometry\PolyhedralSurfaceImmutable as PolyhedralSurfaceXYZM;
 
 /**
  * Decode an EWKT polyhedral surface using the shared polygonal grammar.
@@ -40,11 +40,11 @@ final class PolyhedralSurfaceEwktParser implements WktGeometryParserInterface
     }
 
     /**
-     * Parse and validate the concrete surface before returning it.
+     * Parse the surface representation without checking geometric validity.
      *
      * @param CoordinateDimensionEnum|null $inheritedDimension dimension inherited from a collection
      */
-    public function parse(?CoordinateDimensionEnum $inheritedDimension = null): PolyhedralSurfaceInterface
+    public function parse(?CoordinateDimensionEnum $inheritedDimension = null): ImmutablePolyhedralSurfaceInterface
     {
         $geometry = $this->parser->parse($inheritedDimension);
 

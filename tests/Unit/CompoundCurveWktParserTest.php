@@ -25,9 +25,9 @@ use LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\CompoundCurveWktParser;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\WktGeometryParserDispatcherInterface;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktCoordinateReader;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor;
-use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
-use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\CircularString;
-use LongitudeOne\SpatialTypes\Types\Dimension3z\Geometry\Point;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutableSpatialInterface;
+use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\CircularStringImmutable as CircularString;
+use LongitudeOne\SpatialTypes\Types\Dimension3z\Geometry\PointImmutable as Point;
 use PHPUnit\Framework\TestCase;
 
 /** @internal */
@@ -56,9 +56,9 @@ class CompoundCurveWktParserTest extends TestCase
     /**
      * Build a parser whose dispatcher violates one component postcondition.
      *
-     * @param SpatialInterface $component geometry returned for the circular-string token
+     * @param ImmutableSpatialInterface $component geometry returned for the circular-string token
      */
-    private function parserReturning(SpatialInterface $component): CompoundCurveWktParser
+    private function parserReturning(ImmutableSpatialInterface $component): CompoundCurveWktParser
     {
         $cursor = new WktTokenCursor('(CIRCULARSTRING Z EMPTY)');
         $dispatcher = $this->createMock(WktGeometryParserDispatcherInterface::class);

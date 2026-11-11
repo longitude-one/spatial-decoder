@@ -21,7 +21,6 @@ use LongitudeOne\Core\Enum\GeometryTypeEnum;
 use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialDecoder\Strategy\EwktDecoderStrategy;
 use LongitudeOne\SpatialDecoder\Strategy\WktDecoderStrategy;
-use LongitudeOne\SpatialTypes\Exception\SpatialTypeExceptionInterface;
 use LongitudeOne\SpatialTypes\Interfaces\CircularStringInterface;
 use LongitudeOne\SpatialTypes\Interfaces\CollectionInterface;
 use LongitudeOne\SpatialTypes\Interfaces\CompoundCurveInterface;
@@ -48,9 +47,7 @@ class CompoundCurveDecoderTest extends TestCase
     {
         yield 'typed linear component' => ['COMPOUNDCURVE (LINESTRING (0 0,1 1))'];
         yield 'unsupported component' => ['COMPOUNDCURVE (POINT (0 0))'];
-        yield 'disconnected components' => ['COMPOUNDCURVE ((0 0,1 1),CIRCULARSTRING (2 2,3 3,4 4))'];
         yield 'empty line component' => ['COMPOUNDCURVE (EMPTY)'];
-        yield 'empty circular component' => ['COMPOUNDCURVE (CIRCULARSTRING EMPTY)'];
         yield 'parent XYZ with short component' => ['COMPOUNDCURVE Z ((0 0 1,1 1 2),CIRCULARSTRING (1 1,2 0,3 1))'];
         yield 'conflicting component marker' => ['COMPOUNDCURVE Z (CIRCULARSTRING M (0 0 1,1 1 2,2 0 3))'];
         yield 'EWKT independently inferred component dimension' => ['COMPOUNDCURVE ((0 0 1,1 1 2),CIRCULARSTRING (1 1,2 0,3 1))'];
@@ -79,7 +76,7 @@ class CompoundCurveDecoderTest extends TestCase
             foreach ([new WktDecoderStrategy(), new EwktDecoderStrategy()] as $strategy) {
                 $empty = $strategy->decode($input);
                 self::assertInstanceOf(CompoundCurveInterface::class, $empty);
-                self::assertTrue($empty->isEmpty());
+                self::assertSame([], $empty->toArray());
                 self::assertSame($dimension, $empty->getDimension());
             }
         }
@@ -96,7 +93,7 @@ class CompoundCurveDecoderTest extends TestCase
 
         $closed = (new WktDecoderStrategy())->decode('COMPOUNDCURVE ((0 0,1 1,0 0))');
         self::assertInstanceOf(CompoundCurveInterface::class, $closed);
-        self::assertTrue($closed->isClosed());
+        self::assertSame([[0, 0], [1, 1], [0, 0]], $closed->getCurve(0)->toArray());
 
         $inferred = (new EwktDecoderStrategy())->decode('COMPOUNDCURVE ((0 0 1,1 1 2),CIRCULARSTRING (1 1 2,2 0 3,3 1 4))');
         self::assertInstanceOf(CompoundCurveInterface::class, $inferred);
@@ -153,7 +150,8 @@ class CompoundCurveDecoderTest extends TestCase
             self::assertSame(GeometryTypeEnum::COMPOUNDCURVE, $curve->getType());
             self::assertSame($dimension, $curve->getDimension());
             self::assertSame([[$start, $join], [$join, $middle, $end]], $curve->toArray());
-            self::assertFalse($curve->isClosed());
+            self::assertSame($start, $curve->getStartPoint()?->toArray());
+            self::assertSame($end, $curve->getEndPoint()?->toArray());
             self::assertCount(2, $curve->getCurves());
             self::assertInstanceOf(LineStringInterface::class, $curve->getCurve(0));
             self::assertInstanceOf(CircularStringInterface::class, $curve->getCurve(1));
@@ -208,16 +206,5 @@ class CompoundCurveDecoderTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
         (new WktDecoderStrategy())->decode('COMPOUNDCURVE ((0 0 1,1 1 2),CIRCULARSTRING (1 1 2,2 0 3,3 1 4))');
-    }
-
-    /** Domain validation failures are wrapped and retain their cause. */
-    public function testWrapsSpatialContractFailure(): void
-    {
-        try {
-            (new WktDecoderStrategy())->decode('COMPOUNDCURVE ((0 0,1 1),CIRCULARSTRING (2 2,3 3,4 4))');
-            self::fail('Disconnected components must be rejected.');
-        } catch (InvalidArgumentException $exception) {
-            self::assertInstanceOf(SpatialTypeExceptionInterface::class, $exception->getPrevious());
-        }
     }
 }

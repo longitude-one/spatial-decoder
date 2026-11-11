@@ -19,12 +19,12 @@ namespace LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory;
 use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
 use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialTypes\Exception\SpatialTypeExceptionInterface;
-use LongitudeOne\SpatialTypes\Interfaces\CircularStringInterface;
-use LongitudeOne\SpatialTypes\Interfaces\PointInterface;
-use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\CircularString as CircularString2D;
-use LongitudeOne\SpatialTypes\Types\Dimension3m\Geometry\CircularString as CircularString3DM;
-use LongitudeOne\SpatialTypes\Types\Dimension3z\Geometry\CircularString as CircularString3DZ;
-use LongitudeOne\SpatialTypes\Types\Dimension4zm\Geometry\CircularString as CircularString4D;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutableCircularStringInterface;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutablePointInterface;
+use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\CircularStringImmutable as CircularString2D;
+use LongitudeOne\SpatialTypes\Types\Dimension3m\Geometry\CircularStringImmutable as CircularString3DM;
+use LongitudeOne\SpatialTypes\Types\Dimension3z\Geometry\CircularStringImmutable as CircularString3DZ;
+use LongitudeOne\SpatialTypes\Types\Dimension4zm\Geometry\CircularStringImmutable as CircularString4D;
 
 /**
  * Creates dimension-specific WKT circular strings.
@@ -48,12 +48,12 @@ final class WktCircularStringFactory
      * @param CoordinateDimensionEnum $dimension   coordinate dimension of the circular string
      * @param list<list<float|int>>   $coordinates ordered circular-string coordinates
      */
-    public function createCircularString(CoordinateDimensionEnum $dimension, array $coordinates): CircularStringInterface
+    public function createCircularString(CoordinateDimensionEnum $dimension, array $coordinates): ImmutableCircularStringInterface
     {
         try {
             // Build dimension-specific points before assembling the circular string.
             $points = array_map(
-                fn (array $ordinates): PointInterface => $this->pointFactory->createPoint($dimension, $ordinates),
+                fn (array $ordinates): ImmutablePointInterface => $this->pointFactory->createPoint($dimension, $ordinates),
                 $coordinates
             );
 

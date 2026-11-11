@@ -17,12 +17,12 @@ declare(strict_types=1);
 namespace LongitudeOne\SpatialDecoder\Strategy\Wkt\Factory;
 
 use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
-use LongitudeOne\SpatialTypes\Interfaces\LineStringInterface;
-use LongitudeOne\SpatialTypes\Interfaces\MultiLineStringInterface;
-use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\MultiLineString as MultiLineString2D;
-use LongitudeOne\SpatialTypes\Types\Dimension3m\Geometry\MultiLineString as MultiLineString3DM;
-use LongitudeOne\SpatialTypes\Types\Dimension3z\Geometry\MultiLineString as MultiLineString3DZ;
-use LongitudeOne\SpatialTypes\Types\Dimension4zm\Geometry\MultiLineString as MultiLineString4D;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutableLineStringInterface;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutableMultiLineStringInterface;
+use LongitudeOne\SpatialTypes\Types\Dimension2\Geometry\MultiLineStringImmutable as MultiLineString2D;
+use LongitudeOne\SpatialTypes\Types\Dimension3m\Geometry\MultiLineStringImmutable as MultiLineString3DM;
+use LongitudeOne\SpatialTypes\Types\Dimension3z\Geometry\MultiLineStringImmutable as MultiLineString3DZ;
+use LongitudeOne\SpatialTypes\Types\Dimension4zm\Geometry\MultiLineStringImmutable as MultiLineString4D;
 
 /**
  * Creates dimension-specific WKT multi-line strings.
@@ -46,11 +46,11 @@ final class WktMultiLineStringFactory
      * @param CoordinateDimensionEnum     $dimension   coordinate dimension of the multi-line string
      * @param list<list<list<float|int>>> $lineStrings ordered line-string coordinates
      */
-    public function createMultiLineString(CoordinateDimensionEnum $dimension, array $lineStrings): MultiLineStringInterface
+    public function createMultiLineString(CoordinateDimensionEnum $dimension, array $lineStrings): ImmutableMultiLineStringInterface
     {
         // Build every member with the multi-line string's coordinate dimension.
         $members = array_map(
-            fn (array $coordinates): LineStringInterface => $this->lineStringFactory->createLineString($dimension, $coordinates),
+            fn (array $coordinates): ImmutableLineStringInterface => $this->lineStringFactory->createLineString($dimension, $coordinates),
             $lineStrings
         );
 

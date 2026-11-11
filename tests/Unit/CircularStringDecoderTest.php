@@ -22,7 +22,6 @@ use LongitudeOne\SpatialDecoder\Decoder;
 use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialDecoder\Strategy\EwktDecoderStrategy;
 use LongitudeOne\SpatialDecoder\Strategy\WktDecoderStrategy;
-use LongitudeOne\SpatialTypes\Exception\SpatialTypeExceptionInterface;
 use LongitudeOne\SpatialTypes\Interfaces\CircularStringInterface;
 use LongitudeOne\SpatialTypes\Interfaces\CollectionInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -67,9 +66,7 @@ class CircularStringDecoderTest extends TestCase
         yield 'collection tuple mismatch' => ['GEOMETRYCOLLECTION Z (CIRCULARSTRING (0 0 1,1 1,2 0 3))'];
         yield 'nested SRID' => ['GEOMETRYCOLLECTION (SRID=3857;CIRCULARSTRING EMPTY)'];
 
-        foreach (['(0 0)', '(0 0,1 1)', '(0 0,1 1,2 0,3 1)', '(0 0,1 1,2 0,3 1,4 0,5 1)',
-            '(0 0,0 0,2 0)', '(0 0,2 0,2 0)', '(0 0,1 1,2 0,2 0,4 0)',
-            '()', '(EMPTY)', '(garbage)', '(0 0,1 1,2 0,)', '(0 0,1 1,2 0',
+        foreach (['()', '(EMPTY)', '(garbage)', '(0 0,1 1,2 0,)', '(0 0,1 1,2 0',
             '((0 0,1 1,2 0))', '(0 0,1 1 2,2 0)', 'Z (0 0 1,1 1,2 0 3)',
             'M (0 0 1,1 1 2,2 0)', 'ZM (0 0 1 2,1 1 2 3,2 0 3)',
             'Z M EMPTY', 'EMPTY trailing', '(0 0,1e999 1,2 0)', '(0 0,1@1,2 0)'] as $body) {
@@ -93,7 +90,7 @@ class CircularStringDecoderTest extends TestCase
             self::assertInstanceOf(CollectionInterface::class, $nested);
             $empty = $nested->getElements()[0];
             self::assertInstanceOf(CircularStringInterface::class, $empty);
-            self::assertTrue($empty->isEmpty());
+            self::assertSame([], $empty->toArray());
             self::assertSame(CoordinateDimensionEnum::XYM, $empty->getDimension());
             self::assertSame($collection->getSrid(), $empty->getSrid());
         }
@@ -132,9 +129,9 @@ class CircularStringDecoderTest extends TestCase
                 self::assertSame(GeometryTypeEnum::CIRCULARSTRING, $curve->getType());
                 self::assertSame($dimension, $curve->getDimension());
                 self::assertSame($coordinates, $curve->toArray());
-                self::assertSame([] === $coordinates, $curve->isEmpty());
                 self::assertSame('' === $prefix ? 0 : 4326, $curve->getSrid());
-                self::assertSame([] !== $coordinates && $coordinates[0] === $coordinates[\count($coordinates) - 1], $curve->isClosed());
+                self::assertSame($coordinates[0] ?? null, $curve->getStartPoint()?->toArray());
+                self::assertSame($coordinates[\count($coordinates) - 1] ?? null, $curve->getEndPoint()?->toArray());
                 foreach ($curve->getPoints() as $point) {
                     self::assertSame($curve->getSrid(), $point->getSrid());
                 }
@@ -161,16 +158,5 @@ class CircularStringDecoderTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
         (new WktDecoderStrategy())->decode('SRID=4326;CIRCULARSTRING (0 0,1 1,2 0)');
-    }
-
-    /** Verify domain validation is translated without losing its cause. */
-    public function testWrapsSpatialValidationFailure(): void
-    {
-        try {
-            (new WktDecoderStrategy())->decode('CIRCULARSTRING (0 0,1 1)');
-            self::fail('An invalid control-point count must be rejected.');
-        } catch (InvalidArgumentException $exception) {
-            self::assertInstanceOf(SpatialTypeExceptionInterface::class, $exception->getPrevious());
-        }
     }
 }

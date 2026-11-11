@@ -23,7 +23,7 @@ use LongitudeOne\SpatialDecoder\Exception\LogicException;
 use LongitudeOne\SpatialDecoder\Strategy\Common\Lexer;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktDialect;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor;
-use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutableSpatialInterface;
 
 /**
  * Dispatches geometries in a shared WKT token stream.
@@ -50,9 +50,9 @@ final class WktGeometryParserRegistry implements WktGeometryParserDispatcherInte
      *
      * @param CoordinateDimensionEnum|null $inheritedDimension collection dimension to apply to unmarked members
      *
-     * @return SpatialInterface the decoded geometry
+     * @return ImmutableSpatialInterface the decoded geometry
      */
-    public function parseNext(?CoordinateDimensionEnum $inheritedDimension): SpatialInterface
+    public function parseNext(?CoordinateDimensionEnum $inheritedDimension): ImmutableSpatialInterface
     {
         $geometryToken = $this->cursor->currentToken();
         $geometryType = $geometryToken?->type;
