@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the LongitudeOne Spatial project.
  *
@@ -92,7 +93,7 @@ class EwktDimensionTest extends TestCase
     #[DataProvider('representations')]
     public function testEquivalentRepresentations(string $ewkt, string $wkt): void
     {
-        $expected = (new WktDecoderStrategy())->decode($wkt);
+        $expected = new WktDecoderStrategy()->decode($wkt);
         $strategy = new EwktDecoderStrategy();
         self::assertEquals($expected, $strategy->decode($ewkt));
         self::assertEquals($expected->withSrid(4326), $strategy->decode('SRID=4326;'.$ewkt));
@@ -103,7 +104,7 @@ class EwktDimensionTest extends TestCase
     public function testInvalidDimensions(string $input): void
     {
         $this->expectException(InvalidArgumentException::class);
-        (new EwktDecoderStrategy())->decode($input);
+        new EwktDecoderStrategy()->decode($input);
     }
 
     /** Explicitly distinguish the third ordinate's meaning. */
@@ -124,8 +125,8 @@ class EwktDimensionTest extends TestCase
     #[DataProvider('ewktOnlyRepresentations')]
     public function testWktStillRequiresMarkers(string $input): void
     {
-        (new EwktDecoderStrategy())->decode($input);
+        new EwktDecoderStrategy()->decode($input);
         $this->expectException(InvalidArgumentException::class);
-        (new WktDecoderStrategy())->decode($input);
+        new WktDecoderStrategy()->decode($input);
     }
 }

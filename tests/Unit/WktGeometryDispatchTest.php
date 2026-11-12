@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the LongitudeOne Spatial project.
  *
@@ -47,7 +48,7 @@ class WktGeometryDispatchTest extends TestCase
     /** Test separate dimension markers continue to be accepted. */
     public function testDecodeAcceptsSeparateDimensionMarker(): void
     {
-        $point = (new WktDecoderStrategy())->decode('POINT ZM (1 2 3 4)');
+        $point = new WktDecoderStrategy()->decode('POINT ZM (1 2 3 4)');
         self::assertInstanceOf(Point::class, $point);
         self::assertSame(1, $point->getX());
         self::assertSame(2, $point->getY());
@@ -64,7 +65,7 @@ class WktGeometryDispatchTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageIsOrContains(\sprintf('Invalid WKT input: "%s".', $formattedInput));
 
-        (new WktDecoderStrategy())->decode($input);
+        new WktDecoderStrategy()->decode($input);
     }
 
     /** Test compact dimension suffixes are rejected with guidance to use standard WKT syntax. */
@@ -85,7 +86,7 @@ class WktGeometryDispatchTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (new WktDecoderStrategy())->decode($wkt);
+        new WktDecoderStrategy()->decode($wkt);
     }
 
     /**
@@ -98,7 +99,7 @@ class WktGeometryDispatchTest extends TestCase
     private function assertCompactDimensionRejected(string $wkt, string $compactForm, string $standardForm): void
     {
         try {
-            (new WktDecoderStrategy())->decode($wkt);
+            new WktDecoderStrategy()->decode($wkt);
             self::fail('Compact dimension suffixes must be rejected.');
         } catch (InvalidArgumentException $exception) {
             self::assertStringContainsString(\sprintf(

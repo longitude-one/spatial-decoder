@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the LongitudeOne Spatial project.
  *
@@ -81,7 +82,7 @@ class SpatialTypeImplementationTest extends TestCase
     {
         $this->expectException(NotYetImplementedException::class);
 
-        (new WktDecoderStrategy())->decode('CURVEPOLYGON (garbage)');
+        new WktDecoderStrategy()->decode('CURVEPOLYGON (garbage)');
     }
 
     /**

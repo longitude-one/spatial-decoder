@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the LongitudeOne Spatial project.
  *
@@ -76,7 +77,7 @@ class LineStringWktDecoderTest extends TestCase
     #[DataProvider('emptyLineStringWkts')]
     public function testDecodePreservesEmptyLineStringDimension(string $wkt, bool $hasZ, bool $hasM): void
     {
-        $lineString = (new WktDecoderStrategy())->decode($wkt);
+        $lineString = new WktDecoderStrategy()->decode($wkt);
 
         self::assertInstanceOf(LineStringInterface::class, $lineString);
         self::assertSame([], $lineString->toArray());
@@ -94,7 +95,7 @@ class LineStringWktDecoderTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (new WktDecoderStrategy())->decode($wkt);
+        new WktDecoderStrategy()->decode($wkt);
     }
 
     /**
@@ -108,7 +109,7 @@ class LineStringWktDecoderTest extends TestCase
     #[DataProvider('lineStringWkts')]
     public function testDecodeSupportsEveryLineStringDimension(string $wkt, array $expectedCoordinates, bool $hasZ, bool $hasM): void
     {
-        $lineString = (new WktDecoderStrategy())->decode($wkt);
+        $lineString = new WktDecoderStrategy()->decode($wkt);
 
         self::assertInstanceOf(LineStringInterface::class, $lineString);
         self::assertSame($expectedCoordinates, $lineString->toArray());

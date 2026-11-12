@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the LongitudeOne Spatial project.
  *
@@ -85,7 +86,7 @@ class EwktGeometryCoverageTest extends TestCase
     #[DataProvider('emptyGeometries')]
     public function testEmptyGeometry(string $input, GeometryTypeEnum $type, CoordinateDimensionEnum $dimension): void
     {
-        $geometry = (new EwktDecoderStrategy())->decode('SRID=4326;'.$input);
+        $geometry = new EwktDecoderStrategy()->decode('SRID=4326;'.$input);
         self::assertSame([], $geometry->toArray());
         self::assertSame($type, $geometry->getType());
         self::assertSame($dimension, $geometry->getDimension());
@@ -97,14 +98,14 @@ class EwktGeometryCoverageTest extends TestCase
     public function testInvalidGeometry(string $input): void
     {
         $this->expectException(InvalidArgumentException::class);
-        (new EwktDecoderStrategy())->decode('SRID=4326;'.$input);
+        new EwktDecoderStrategy()->decode('SRID=4326;'.$input);
     }
 
     /** Measures survive both explicit and inferred XYZM surface decoding. */
     public function testMeasuredSurface(): void
     {
         foreach (['', ' ZM'] as $marker) {
-            $surface = (new EwktDecoderStrategy())->decode('SRID=4326;POLYHEDRALSURFACE'.$marker.' (((0 0 0 7,4 0 0 8,0 4 0 9,0 0 0 7)))');
+            $surface = new EwktDecoderStrategy()->decode('SRID=4326;POLYHEDRALSURFACE'.$marker.' (((0 0 0 7,4 0 0 8,0 4 0 9,0 0 0 7)))');
             self::assertSame(CoordinateDimensionEnum::XYZM, $surface->getDimension());
             self::assertSame([[[[0, 0, 0, 7], [4, 0, 0, 8], [0, 4, 0, 9], [0, 0, 0, 7]]]], $surface->toArray());
             $this->assertMetadata($surface);
@@ -117,7 +118,7 @@ class EwktGeometryCoverageTest extends TestCase
         $patch = [[0, 0, 0], [4, 0, 0], [0, 4, 0], [0, 0, 0]];
         $other = [[0, 0, 0], [0, 0, 4], [4, 0, 0], [0, 0, 0]];
         $surface = 'POLYHEDRALSURFACE (((0 0 0,4 0 0,0 4 0,0 0 0)),((0 0 0,0 0 4,4 0 0,0 0 0)))';
-        $geometry = (new EwktDecoderStrategy())->decode('SRID=4326;GEOMETRYCOLLECTION ('.$surface.',GEOMETRYCOLLECTION (TRIANGLE ((0 0 0,4 0 0,0 4 0,0 0 0)),TRIANGLE EMPTY))');
+        $geometry = new EwktDecoderStrategy()->decode('SRID=4326;GEOMETRYCOLLECTION ('.$surface.',GEOMETRYCOLLECTION (TRIANGLE ((0 0 0,4 0 0,0 4 0,0 0 0)),TRIANGLE EMPTY))');
         self::assertInstanceOf(CollectionInterface::class, $geometry);
         self::assertSame(CoordinateDimensionEnum::XYZ, $geometry->getDimension());
         $elements = $geometry->getElements();
@@ -137,7 +138,7 @@ class EwktGeometryCoverageTest extends TestCase
             $top[1] = 4;
             $ring = [$origin, $right, $top, $origin];
             $text = implode(',', array_map(static fn (array $point): string => implode(' ', $point), $ring));
-            $triangle = (new EwktDecoderStrategy())->decode('SRID=4326;TRIANGLE'.$marker.' (('.$text.'))');
+            $triangle = new EwktDecoderStrategy()->decode('SRID=4326;TRIANGLE'.$marker.' (('.$text.'))');
             self::assertSame(GeometryTypeEnum::TRIANGLE, $triangle->getType());
             self::assertSame([$ring], $triangle->toArray());
             self::assertSame(str_contains($marker, 'Z'), $triangle->hasZ());
@@ -152,7 +153,7 @@ class EwktGeometryCoverageTest extends TestCase
     {
         foreach ([$type->name.' EMPTY', 'GEOMETRYCOLLECTION (GEOMETRYCOLLECTION ('.$type->name.' EMPTY))'] as $input) {
             try {
-                (new EwktDecoderStrategy())->decode($input);
+                new EwktDecoderStrategy()->decode($input);
                 self::fail('Expected an unimplemented geometry exception.');
             } catch (NotYetImplementedException $exception) {
                 self::assertSame($type, $exception->getSpatialType());
@@ -166,7 +167,7 @@ class EwktGeometryCoverageTest extends TestCase
     {
         foreach (['TRIANGLE EMPTY', 'POLYHEDRALSURFACE Z EMPTY'] as $input) {
             try {
-                (new WktDecoderStrategy())->decode($input);
+                new WktDecoderStrategy()->decode($input);
                 self::fail('WKT must retain its existing unsupported-type behavior.');
             } catch (InvalidArgumentException $exception) {
                 self::assertStringContainsString('not supported', $exception->getMessage());

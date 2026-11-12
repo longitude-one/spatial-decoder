@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the LongitudeOne Spatial project.
  *
@@ -92,9 +93,9 @@ class EwktDecoderTest extends TestCase
     #[DataProvider('geometries')]
     public function testDecodeWithoutSpatialReference(string $wkt): void
     {
-        $actual = (new EwktDecoderStrategy())->decode($wkt);
+        $actual = new EwktDecoderStrategy()->decode($wkt);
 
-        self::assertEquals((new WktDecoderStrategy())->decode($wkt), $actual);
+        self::assertEquals(new WktDecoderStrategy()->decode($wkt), $actual);
         $this->assertSpatialReference($actual, 0);
     }
 
@@ -106,8 +107,8 @@ class EwktDecoderTest extends TestCase
     #[DataProvider('geometries')]
     public function testDecodeWithSpatialReference(string $wkt): void
     {
-        $expected = (new WktDecoderStrategy())->decode($wkt)->withSrid(4326);
-        $actual = (new Decoder(new EwktDecoderStrategy()))->decode('SRID=4326;'.$wkt);
+        $expected = new WktDecoderStrategy()->decode($wkt)->withSrid(4326);
+        $actual = new Decoder(new EwktDecoderStrategy())->decode('SRID=4326;'.$wkt);
 
         self::assertEquals($expected, $actual);
         $this->assertSpatialReference($actual, 4326);
@@ -123,7 +124,7 @@ class EwktDecoderTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (new EwktDecoderStrategy())->decode($input);
+        new EwktDecoderStrategy()->decode($input);
     }
 
     /**
@@ -135,7 +136,7 @@ class EwktDecoderTest extends TestCase
     #[DataProvider('spatialReferences')]
     public function testSpatialReferenceValues(string $prefix, int $srid): void
     {
-        $actual = (new EwktDecoderStrategy())->decode($prefix.'POINT (1 2)');
+        $actual = new EwktDecoderStrategy()->decode($prefix.'POINT (1 2)');
 
         self::assertSame($srid, $actual->getSrid());
         self::assertSame([1, 2], $actual->toArray());

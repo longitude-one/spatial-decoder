@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the LongitudeOne Spatial project.
  *
@@ -79,7 +80,7 @@ class MultiPointWktDecoderTest extends TestCase
     #[DataProvider('emptyMultiPointWkts')]
     public function testDecodePreservesEmptyMultiPointDimensions(string $wkt, bool $hasZ, bool $hasM): void
     {
-        $multiPoint = (new WktDecoderStrategy())->decode($wkt);
+        $multiPoint = new WktDecoderStrategy()->decode($wkt);
 
         self::assertInstanceOf(MultiPointInterface::class, $multiPoint);
         self::assertSame([], $multiPoint->toArray());
@@ -97,7 +98,7 @@ class MultiPointWktDecoderTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (new WktDecoderStrategy())->decode($wkt);
+        new WktDecoderStrategy()->decode($wkt);
     }
 
     /**
@@ -111,7 +112,7 @@ class MultiPointWktDecoderTest extends TestCase
     #[DataProvider('multiPointWkts')]
     public function testDecodeSupportsMultiPointRepresentations(string $wkt, array $expectedCoordinates, bool $hasZ, bool $hasM): void
     {
-        $multiPoint = (new WktDecoderStrategy())->decode($wkt);
+        $multiPoint = new WktDecoderStrategy()->decode($wkt);
 
         self::assertInstanceOf(MultiPointInterface::class, $multiPoint);
         self::assertSame($expectedCoordinates, $multiPoint->toArray());

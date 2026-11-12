@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the LongitudeOne Spatial project.
  *
@@ -123,7 +124,7 @@ class GeometryCollectionWktDecoderTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (new WktDecoderStrategy())->decode($wkt);
+        new WktDecoderStrategy()->decode($wkt);
     }
 
     /**
@@ -151,7 +152,7 @@ class GeometryCollectionWktDecoderTest extends TestCase
      */
     private function decodeCollection(string $wkt): CollectionInterface
     {
-        $collection = (new WktDecoderStrategy())->decode($wkt);
+        $collection = new WktDecoderStrategy()->decode($wkt);
         if (!$collection instanceof CollectionInterface) {
             throw new LogicException('The decoded value must be a geometry collection.');
         }

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the LongitudeOne Spatial project.
  *
@@ -51,7 +52,7 @@ class NonInstantiableGeometryTypeTest extends TestCase
                 foreach ([' EMPTY', ' Z EMPTY', ' M EMPTY', ' ZM EMPTY', 'Z EMPTY', 'M EMPTY', 'ZM EMPTY', ' (garbage)'] as $body) {
                     foreach ([strtolower($type->name).$body, 'GEOMETRYCOLLECTION ('.$type->name.$body.')'] as $geometry) {
                         try {
-                            (new Decoder($strategy))->decode($prefix.$geometry);
+                            new Decoder($strategy)->decode($prefix.$geometry);
                             self::fail('A non-instantiable geometry must be rejected.');
                         } catch (NonInstantiableGeometryTypeException $exception) {
                             self::assertContains(DecoderExceptionInterface::class, class_implements($exception));

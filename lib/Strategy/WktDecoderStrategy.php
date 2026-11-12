@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the LongitudeOne Spatial project.
  *
@@ -29,6 +30,6 @@ final class WktDecoderStrategy implements StringDecoderStrategyInterface
      */
     public function decode(string $data): ImmutableSpatialInterface
     {
-        return (new WktParserFactory())->create($data)->parse();
+        return new WktParserFactory()->create($data)->parse();
     }
 }

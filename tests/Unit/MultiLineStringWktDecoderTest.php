@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the LongitudeOne Spatial project.
  *
@@ -79,7 +80,7 @@ class MultiLineStringWktDecoderTest extends TestCase
     #[DataProvider('emptyMultiLineStringWkts')]
     public function testDecodePreservesEmptyMultiLineStringDimension(string $wkt, bool $hasZ, bool $hasM): void
     {
-        $multiLineString = (new WktDecoderStrategy())->decode($wkt);
+        $multiLineString = new WktDecoderStrategy()->decode($wkt);
 
         self::assertInstanceOf(MultiLineStringInterface::class, $multiLineString);
         self::assertSame([], $multiLineString->toArray());
@@ -90,7 +91,7 @@ class MultiLineStringWktDecoderTest extends TestCase
     /** Test preservation of empty line members in a dimensioned multi-line string. */
     public function testDecodePreservesEmptyMultiLineStringMembers(): void
     {
-        $multiLineString = (new WktDecoderStrategy())->decode('MULTILINESTRING Z (EMPTY, (1 2 3, 4 5 6))');
+        $multiLineString = new WktDecoderStrategy()->decode('MULTILINESTRING Z (EMPTY, (1 2 3, 4 5 6))');
 
         self::assertInstanceOf(MultiLineStringInterface::class, $multiLineString);
         self::assertSame([[], [[1, 2, 3], [4, 5, 6]]], $multiLineString->toArray());
@@ -108,7 +109,7 @@ class MultiLineStringWktDecoderTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (new WktDecoderStrategy())->decode($wkt);
+        new WktDecoderStrategy()->decode($wkt);
     }
 
     /**
@@ -122,7 +123,7 @@ class MultiLineStringWktDecoderTest extends TestCase
     #[DataProvider('multiLineStringWkts')]
     public function testDecodeSupportsEveryMultiLineStringDimension(string $wkt, array $expectedCoordinates, bool $hasZ, bool $hasM): void
     {
-        $multiLineString = (new WktDecoderStrategy())->decode($wkt);
+        $multiLineString = new WktDecoderStrategy()->decode($wkt);
 
         self::assertInstanceOf(MultiLineStringInterface::class, $multiLineString);
         self::assertSame($expectedCoordinates, $multiLineString->toArray());

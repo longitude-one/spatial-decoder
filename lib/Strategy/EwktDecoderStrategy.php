@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the LongitudeOne Spatial project.
  *
@@ -33,7 +34,7 @@ final class EwktDecoderStrategy implements StringDecoderStrategyInterface
     {
         $cursor = new WktTokenCursor($data);
         if (!$cursor->isNextToken(Lexer::T_SRID)) {
-            return (new WktParserFactory())->createFromCursor($cursor, WktDialect::EWKT)->parse();
+            return new WktParserFactory()->createFromCursor($cursor, WktDialect::EWKT)->parse();
         }
 
         $cursor->moveNext();
@@ -51,7 +52,7 @@ final class EwktDecoderStrategy implements StringDecoderStrategyInterface
 
         $this->consume($cursor, Lexer::T_SEMICOLON);
 
-        return (new WktParserFactory())->createFromCursor($cursor, WktDialect::EWKT)->parse()->withSrid($srid);
+        return new WktParserFactory()->createFromCursor($cursor, WktDialect::EWKT)->parse()->withSrid($srid);
     }
 
     /**

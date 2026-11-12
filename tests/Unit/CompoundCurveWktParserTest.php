@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the LongitudeOne Spatial project.
  *
@@ -58,7 +59,7 @@ class CompoundCurveWktParserTest extends TestCase
     {
         $cursor = new WktTokenCursor('(CIRCULARSTRING Z EMPTY)');
         $dispatcher = $this->createMock(WktGeometryParserDispatcherInterface::class);
-        $dispatcher->expects(self::once())->method('parseNext')
+        $dispatcher->expects($this->once())->method('parseNext')
             ->with(CoordinateDimensionEnum::XYZ)->willReturn($component);
 
         return new CompoundCurveWktParser(

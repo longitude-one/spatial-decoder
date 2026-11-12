@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the LongitudeOne Spatial project.
  *
@@ -36,7 +37,7 @@ class NotYetImplementedExceptionTest extends TestCase
 
         $this->expectExceptionObject($exception);
 
-        (new Decoder($strategy))->decode(['type' => 'RecognizedType']);
+        new Decoder($strategy)->decode(['type' => 'RecognizedType']);
     }
 
     /** Test the format-independent public exception contract. */
@@ -58,6 +59,6 @@ class NotYetImplementedExceptionTest extends TestCase
 
         $this->expectExceptionObject($exception);
 
-        (new Decoder($strategy))->decode('encoded-data');
+        new Decoder($strategy)->decode('encoded-data');
     }
 }

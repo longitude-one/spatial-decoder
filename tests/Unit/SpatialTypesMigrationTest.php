@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the LongitudeOne Spatial project.
  *
@@ -87,7 +88,7 @@ class SpatialTypesMigrationTest extends TestCase
     {
         foreach ([new WktDecoderStrategy(), new EwktDecoderStrategy()] as $strategy) {
             $prefix = $strategy instanceof EwktDecoderStrategy ? 'SRID=4326;' : '';
-            $geometry = (new Decoder($strategy))->decode($prefix.$input);
+            $geometry = new Decoder($strategy)->decode($prefix.$input);
             self::assertInstanceOf(ImmutableSpatialInterface::class, $geometry);
             self::assertSame($coordinates, $geometry->toArray());
             self::assertSame('' === $prefix ? 0 : 4326, $geometry->getSrid());
@@ -104,7 +105,7 @@ class SpatialTypesMigrationTest extends TestCase
     #[DataProvider('surfaceErrors')]
     public function testPreservesSurfaceErrors(string $input, array $coordinates): void
     {
-        $geometry = (new EwktDecoderStrategy())->decode('SRID=4326;'.$input);
+        $geometry = new EwktDecoderStrategy()->decode('SRID=4326;'.$input);
         self::assertSame($coordinates, $geometry->toArray());
         self::assertSame(4326, $geometry->getSrid());
     }

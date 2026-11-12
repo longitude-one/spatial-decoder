@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the LongitudeOne Spatial project.
  *
@@ -32,7 +33,7 @@ class DecoderTest extends TestCase
     public function testDecodeDelegatesArrayInputToStrategy(): void
     {
         $input = ['encoded' => 'spatial-data'];
-        $decodedSpatial = $this->createStub(SpatialInterface::class);
+        $decodedSpatial = self::createStub(SpatialInterface::class);
         $strategy = $this->createMock(ArrayDecoderStrategyInterface::class);
         $strategy
             ->expects($this->once())
@@ -40,14 +41,14 @@ class DecoderTest extends TestCase
             ->with($input)
             ->willReturn($decodedSpatial);
 
-        self::assertSame($decodedSpatial, (new Decoder($strategy))->decode($input));
+        self::assertSame($decodedSpatial, new Decoder($strategy)->decode($input));
     }
 
     /** Test delegation of object input to the strategy. */
     public function testDecodeDelegatesObjectInputToStrategy(): void
     {
         $input = (object) ['encoded' => 'spatial-data'];
-        $decodedSpatial = $this->createStub(SpatialInterface::class);
+        $decodedSpatial = self::createStub(SpatialInterface::class);
         $strategy = $this->createMock(ObjectDecoderStrategyInterface::class);
         $strategy
             ->expects($this->once())
@@ -55,14 +56,14 @@ class DecoderTest extends TestCase
             ->with($input)
             ->willReturn($decodedSpatial);
 
-        self::assertSame($decodedSpatial, (new Decoder($strategy))->decode($input));
+        self::assertSame($decodedSpatial, new Decoder($strategy)->decode($input));
     }
 
     /** Test delegation of string input to the strategy. */
     public function testDecodeDelegatesStringInputToStrategy(): void
     {
         $input = 'spatial-data';
-        $decodedSpatial = $this->createStub(SpatialInterface::class);
+        $decodedSpatial = self::createStub(SpatialInterface::class);
         $strategy = $this->createMock(StringDecoderStrategyInterface::class);
         $strategy
             ->expects($this->once())
@@ -84,7 +85,7 @@ class DecoderTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
 
-        (new Decoder($strategy))->decode(['encoded' => 'spatial-data']);
+        new Decoder($strategy)->decode(['encoded' => 'spatial-data']);
     }
 
     /** Test rejection of an unsupported string before strategy invocation. */
@@ -95,7 +96,7 @@ class DecoderTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
 
-        (new Decoder($strategy))->decode('spatial-data');
+        new Decoder($strategy)->decode('spatial-data');
     }
 
     /** Test rejection of an unsupported object before strategy invocation. */
@@ -106,14 +107,14 @@ class DecoderTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
 
-        (new Decoder($strategy))->decode((object) ['encoded' => 'spatial-data']);
+        new Decoder($strategy)->decode((object) ['encoded' => 'spatial-data']);
     }
 
     /** Test dispatch when the strategy supports multiple input types. */
     public function testDecodeUsesMatchingContractWhenStrategySupportsMultipleInputs(): void
     {
         $input = (object) ['encoded' => 'spatial-data'];
-        $decodedSpatial = $this->createStub(SpatialInterface::class);
+        $decodedSpatial = self::createStub(SpatialInterface::class);
         $strategy = new class($decodedSpatial) implements ObjectDecoderStrategyInterface, StringDecoderStrategyInterface {
             public string|object|null $receivedInput = null;
 
@@ -141,7 +142,7 @@ class DecoderTest extends TestCase
             }
         };
 
-        $result = (new Decoder($strategy))->decode($input);
+        $result = new Decoder($strategy)->decode($input);
 
         self::assertSame($input, $strategy->receivedInput);
         self::assertSame($decodedSpatial, $result);
@@ -150,7 +151,7 @@ class DecoderTest extends TestCase
     /** Test decoding WKT through the public decoder API. */
     public function testDecodeWktThroughPublicApi(): void
     {
-        $point = (new Decoder(new WktDecoderStrategy()))->decode('POINT ZM (1 2 3 4)');
+        $point = new Decoder(new WktDecoderStrategy())->decode('POINT ZM (1 2 3 4)');
 
         self::assertSame([1, 2, 3, 4], $point->toArray());
     }

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the LongitudeOne Spatial project.
  *
@@ -63,7 +64,7 @@ class ExceptionTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageIsOrContains('The supplied WKT geometry type is not supported. Invalid WKT input: "FOO(42 42)".');
 
-        (new Decoder(new EwktDecoderStrategy()))->decode('FOO(42 42)');
+        new Decoder(new EwktDecoderStrategy())->decode('FOO(42 42)');
     }
 
     /**
@@ -80,7 +81,7 @@ class ExceptionTest extends TestCase
 
         $toParse = \sprintf('%s(42 42)', $notInstantiableType);
 
-        (new Decoder(new EwktDecoderStrategy()))->decode($toParse);
+        new Decoder(new EwktDecoderStrategy())->decode($toParse);
     }
 
     /** Ensure the non-instantiable exception exposes the correct message and geometry type. */
@@ -105,6 +106,6 @@ class ExceptionTest extends TestCase
 
         $toParse = \sprintf('%s(42 42)', $notYetImplemented);
 
-        (new Decoder(new EwktDecoderStrategy()))->decode($toParse);
+        new Decoder(new EwktDecoderStrategy())->decode($toParse);
     }
 }
