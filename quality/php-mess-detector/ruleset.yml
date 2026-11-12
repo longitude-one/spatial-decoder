@@ -8,4 +8,5 @@ rules:
   - ref: rulesets/codesize.xml
   - ref: rulesets/controversial.xml
   - ref: rulesets/design.xml
+  - ref: rulesets/naming.xml
   - ref: rulesets/unusedcode.xml
