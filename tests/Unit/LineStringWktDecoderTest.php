@@ -1,14 +1,11 @@
 <?php
-/**
- * This file is part of the spatial-decoder project.
+
+/*
+ * This file is part of the LongitudeOne Spatial project.
  *
- * PHP 8.4 | 8.5
+ * Copyright (c) 2026 Alexandre Tranchant <alexandre.tranchant@gmail.com>
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
- * Copyright Longitude One 2026
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * See LICENSE for copyright and license information.
  *
  */
 
@@ -80,7 +77,7 @@ class LineStringWktDecoderTest extends TestCase
     #[DataProvider('emptyLineStringWkts')]
     public function testDecodePreservesEmptyLineStringDimension(string $wkt, bool $hasZ, bool $hasM): void
     {
-        $lineString = (new WktDecoderStrategy())->decode($wkt);
+        $lineString = new WktDecoderStrategy()->decode($wkt);
 
         self::assertInstanceOf(LineStringInterface::class, $lineString);
         self::assertSame([], $lineString->toArray());
@@ -98,7 +95,7 @@ class LineStringWktDecoderTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (new WktDecoderStrategy())->decode($wkt);
+        new WktDecoderStrategy()->decode($wkt);
     }
 
     /**
@@ -112,7 +109,7 @@ class LineStringWktDecoderTest extends TestCase
     #[DataProvider('lineStringWkts')]
     public function testDecodeSupportsEveryLineStringDimension(string $wkt, array $expectedCoordinates, bool $hasZ, bool $hasM): void
     {
-        $lineString = (new WktDecoderStrategy())->decode($wkt);
+        $lineString = new WktDecoderStrategy()->decode($wkt);
 
         self::assertInstanceOf(LineStringInterface::class, $lineString);
         self::assertSame($expectedCoordinates, $lineString->toArray());

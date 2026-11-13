@@ -1,14 +1,11 @@
 <?php
-/**
- * This file is part of the spatial-decoder project.
+
+/*
+ * This file is part of the LongitudeOne Spatial project.
  *
- * PHP 8.4 | 8.5
+ * Copyright (c) 2026 Alexandre Tranchant <alexandre.tranchant@gmail.com>
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
- * Copyright Longitude One 2026
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * See LICENSE for copyright and license information.
  *
  */
 
@@ -72,7 +69,7 @@ class CollectionDimensionDialectTest extends TestCase
             $firstMembers[] = 'CIRCULARSTRING '.$body;
         }
         foreach ($firstMembers as $first) {
-            $collection = (new EwktDecoderStrategy())->decode('SRID=4326;GEOMETRYCOLLECTION ('.$first.',GEOMETRYCOLLECTION (CIRCULARSTRING '.$body.',CIRCULARSTRING EMPTY))');
+            $collection = new EwktDecoderStrategy()->decode('SRID=4326;GEOMETRYCOLLECTION ('.$first.',GEOMETRYCOLLECTION (CIRCULARSTRING '.$body.',CIRCULARSTRING EMPTY))');
             self::assertInstanceOf(CollectionInterface::class, $collection);
             $nested = $collection->getElements()[1];
             self::assertInstanceOf(CollectionInterface::class, $nested);
@@ -124,6 +121,6 @@ class CollectionDimensionDialectTest extends TestCase
     public function testWktRejectsSiblingDimension(string $input): void
     {
         $this->expectException(InvalidArgumentException::class);
-        (new WktDecoderStrategy())->decode($input);
+        new WktDecoderStrategy()->decode($input);
     }
 }

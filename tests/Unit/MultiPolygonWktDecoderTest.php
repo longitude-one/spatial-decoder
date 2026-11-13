@@ -1,14 +1,11 @@
 <?php
-/**
- * This file is part of the spatial-decoder project.
+
+/*
+ * This file is part of the LongitudeOne Spatial project.
  *
- * PHP 8.4 | 8.5
+ * Copyright (c) 2026 Alexandre Tranchant <alexandre.tranchant@gmail.com>
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
- * Copyright Longitude One 2026
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * See LICENSE for copyright and license information.
  *
  */
 
@@ -88,7 +85,7 @@ class MultiPolygonWktDecoderTest extends TestCase
     #[DataProvider('emptyMultiPolygonWkts')]
     public function testDecodePreservesEmptyMultiPolygonDimension(string $wkt, bool $hasZ, bool $hasM): void
     {
-        $multiPolygon = (new WktDecoderStrategy())->decode($wkt);
+        $multiPolygon = new WktDecoderStrategy()->decode($wkt);
 
         self::assertInstanceOf(MultiPolygonInterface::class, $multiPolygon);
         self::assertSame([], $multiPolygon->toArray());
@@ -99,7 +96,7 @@ class MultiPolygonWktDecoderTest extends TestCase
     /** Test preservation of empty polygons inside a multi-polygon. */
     public function testDecodePreservesEmptyPolygonMembers(): void
     {
-        $multiPolygon = (new WktDecoderStrategy())->decode('MULTIPOLYGON Z (EMPTY, ((0 0 1, 4 0 2, 4 4 3, 0 0 1)))');
+        $multiPolygon = new WktDecoderStrategy()->decode('MULTIPOLYGON Z (EMPTY, ((0 0 1, 4 0 2, 4 4 3, 0 0 1)))');
 
         self::assertInstanceOf(MultiPolygonInterface::class, $multiPolygon);
         self::assertSame([[], [[[0, 0, 1], [4, 0, 2], [4, 4, 3], [0, 0, 1]]]], $multiPolygon->toArray());
@@ -110,7 +107,7 @@ class MultiPolygonWktDecoderTest extends TestCase
     /** Test a four-member multi-polygon that contains one empty polygon. */
     public function testDecodePreservesFourPolygonMembersIncludingAnEmptyPolygon(): void
     {
-        $multiPolygon = (new WktDecoderStrategy())->decode(
+        $multiPolygon = new WktDecoderStrategy()->decode(
             'MULTIPOLYGON (((0 0, 4 0, 4 4, 0 0)), EMPTY, ((5 5, 8 5, 8 8, 5 5)), ((10 10, 12 10, 12 12, 10 10)))'
         );
 
@@ -134,7 +131,7 @@ class MultiPolygonWktDecoderTest extends TestCase
     /** Test that a polygon member with a hole retains two ordered line-string rings. */
     public function testDecodePreservesHoleInsideOneOfTwoPolygons(): void
     {
-        $multiPolygon = (new WktDecoderStrategy())->decode(
+        $multiPolygon = new WktDecoderStrategy()->decode(
             'MULTIPOLYGON (((0 0, 6 0, 6 6, 0 0), (1 1, 2 1, 2 2, 1 1)), ((10 10, 14 10, 14 14, 10 10)))'
         );
 
@@ -170,7 +167,7 @@ class MultiPolygonWktDecoderTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (new WktDecoderStrategy())->decode($wkt);
+        new WktDecoderStrategy()->decode($wkt);
     }
 
     /**
@@ -184,7 +181,7 @@ class MultiPolygonWktDecoderTest extends TestCase
     #[DataProvider('multiPolygonWkts')]
     public function testDecodeSupportsEveryMultiPolygonDimension(string $wkt, array $expectedCoordinates, bool $hasZ, bool $hasM): void
     {
-        $multiPolygon = (new WktDecoderStrategy())->decode($wkt);
+        $multiPolygon = new WktDecoderStrategy()->decode($wkt);
 
         self::assertInstanceOf(MultiPolygonInterface::class, $multiPolygon);
         self::assertSame($expectedCoordinates, $multiPolygon->toArray());

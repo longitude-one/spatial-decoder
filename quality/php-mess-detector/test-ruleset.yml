@@ -12,4 +12,7 @@ rules:
       - ExcessiveMethodLength
   - ref: rulesets/controversial.xml
   - ref: rulesets/design.xml
+  - ref: rulesets/naming.xml
+    exclude:
+      - LongMethodName
   - ref: rulesets/unusedcode.xml

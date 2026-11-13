@@ -1,14 +1,11 @@
 <?php
-/**
- * This file is part of the spatial-decoder project.
+
+/*
+ * This file is part of the LongitudeOne Spatial project.
  *
- * PHP 8.4 | 8.5
+ * Copyright (c) 2026 Alexandre Tranchant <alexandre.tranchant@gmail.com>
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
- * Copyright Longitude One 2026
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * See LICENSE for copyright and license information.
  *
  */
 
@@ -62,7 +59,7 @@ class CompoundCurveWktParserTest extends TestCase
     {
         $cursor = new WktTokenCursor('(CIRCULARSTRING Z EMPTY)');
         $dispatcher = $this->createMock(WktGeometryParserDispatcherInterface::class);
-        $dispatcher->expects(self::once())->method('parseNext')
+        $dispatcher->expects($this->once())->method('parseNext')
             ->with(CoordinateDimensionEnum::XYZ)->willReturn($component);
 
         return new CompoundCurveWktParser(

@@ -1,14 +1,11 @@
 <?php
-/**
- * This file is part of the spatial-decoder project.
+
+/*
+ * This file is part of the LongitudeOne Spatial project.
  *
- * PHP 8.4 | 8.5
+ * Copyright (c) 2026 Alexandre Tranchant <alexandre.tranchant@gmail.com>
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
- * Copyright Longitude One 2026
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * See LICENSE for copyright and license information.
  *
  */
 
@@ -104,14 +101,14 @@ class CircularStringDecoderTest extends TestCase
     public function testEwktDimensionExtensions(string $input, CoordinateDimensionEnum $dimension): void
     {
         foreach (['', 'SRID=3857;'] as $prefix) {
-            $curve = (new EwktDecoderStrategy())->decode($prefix.$input);
+            $curve = new EwktDecoderStrategy()->decode($prefix.$input);
             self::assertInstanceOf(CircularStringInterface::class, $curve);
             self::assertSame($dimension, $curve->getDimension());
             self::assertSame('' === $prefix ? 0 : 3857, $curve->getSrid());
         }
 
         $this->expectException(InvalidArgumentException::class);
-        (new WktDecoderStrategy())->decode($input);
+        new WktDecoderStrategy()->decode($input);
     }
 
     /**
@@ -124,7 +121,7 @@ class CircularStringDecoderTest extends TestCase
     {
         foreach ([new WktDecoderStrategy(), new EwktDecoderStrategy()] as $strategy) {
             foreach ($strategy instanceof EwktDecoderStrategy ? ['', 'SRID=4326;'] : [''] as $prefix) {
-                $curve = (new Decoder($strategy))->decode($prefix.$input);
+                $curve = new Decoder($strategy)->decode($prefix.$input);
                 self::assertInstanceOf(CircularStringInterface::class, $curve);
                 self::assertSame(GeometryTypeEnum::CIRCULARSTRING, $curve->getType());
                 self::assertSame($dimension, $curve->getDimension());
@@ -157,6 +154,6 @@ class CircularStringDecoderTest extends TestCase
     public function testWktRejectsSrid(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        (new WktDecoderStrategy())->decode('SRID=4326;CIRCULARSTRING (0 0,1 1,2 0)');
+        new WktDecoderStrategy()->decode('SRID=4326;CIRCULARSTRING (0 0,1 1,2 0)');
     }
 }

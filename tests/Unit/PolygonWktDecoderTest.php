@@ -1,14 +1,11 @@
 <?php
-/**
- * This file is part of the spatial-decoder project.
+
+/*
+ * This file is part of the LongitudeOne Spatial project.
  *
- * PHP 8.4 | 8.5
+ * Copyright (c) 2026 Alexandre Tranchant <alexandre.tranchant@gmail.com>
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
- * Copyright Longitude One 2026
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * See LICENSE for copyright and license information.
  *
  */
 
@@ -85,7 +82,7 @@ class PolygonWktDecoderTest extends TestCase
     #[DataProvider('emptyPolygonWkts')]
     public function testDecodePreservesEmptyPolygonDimension(string $wkt, bool $hasZ, bool $hasM): void
     {
-        $polygon = (new WktDecoderStrategy())->decode($wkt);
+        $polygon = new WktDecoderStrategy()->decode($wkt);
 
         self::assertInstanceOf(PolygonInterface::class, $polygon);
         self::assertSame([], $polygon->toArray());
@@ -96,7 +93,7 @@ class PolygonWktDecoderTest extends TestCase
     /** Test that exterior and interior rings remain ordered line strings. */
     public function testDecodePreservesExteriorAndInteriorRingsAsLineStrings(): void
     {
-        $polygon = (new WktDecoderStrategy())->decode('POLYGON ((0 0, 4 0, 4 4, 0 0), (1 1, 2 1, 2 2, 1 1))');
+        $polygon = new WktDecoderStrategy()->decode('POLYGON ((0 0, 4 0, 4 4, 0 0), (1 1, 2 1, 2 2, 1 1))');
 
         self::assertInstanceOf(PolygonInterface::class, $polygon);
         $rings = $polygon->getRings();
@@ -122,7 +119,7 @@ class PolygonWktDecoderTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (new WktDecoderStrategy())->decode($wkt);
+        new WktDecoderStrategy()->decode($wkt);
     }
 
     /**
@@ -136,7 +133,7 @@ class PolygonWktDecoderTest extends TestCase
     #[DataProvider('polygonWkts')]
     public function testDecodeSupportsEveryPolygonDimension(string $wkt, array $expectedCoordinates, bool $hasZ, bool $hasM): void
     {
-        $polygon = (new WktDecoderStrategy())->decode($wkt);
+        $polygon = new WktDecoderStrategy()->decode($wkt);
 
         self::assertInstanceOf(PolygonInterface::class, $polygon);
         self::assertSame($expectedCoordinates, $polygon->toArray());

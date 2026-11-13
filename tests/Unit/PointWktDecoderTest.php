@@ -1,14 +1,11 @@
 <?php
-/**
- * This file is part of the spatial-decoder project.
+
+/*
+ * This file is part of the LongitudeOne Spatial project.
  *
- * PHP 8.4 | 8.5
+ * Copyright (c) 2026 Alexandre Tranchant <alexandre.tranchant@gmail.com>
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
- * Copyright Longitude One 2026
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * See LICENSE for copyright and license information.
  *
  */
 
@@ -110,7 +107,7 @@ class PointWktDecoderTest extends TestCase
     #[DataProvider('emptyPointWkts')]
     public function testDecodePreservesEmptyPointDimension(string $wkt, bool $hasZ, bool $hasM): void
     {
-        $point = (new WktDecoderStrategy())->decode($wkt);
+        $point = new WktDecoderStrategy()->decode($wkt);
 
         self::assertInstanceOf(PointInterface::class, $point);
         self::assertSame([], $point->toArray());
@@ -137,7 +134,7 @@ class PointWktDecoderTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (new WktDecoderStrategy())->decode($wkt);
+        new WktDecoderStrategy()->decode($wkt);
     }
 
     /** Test rejection of SRID-prefixed WKT with the strategy-specific error. */
@@ -146,7 +143,7 @@ class PointWktDecoderTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageIsOrContains('WKT Strategy does not support SRID. Please use the Extended WKT Strategy.');
 
-        (new WktDecoderStrategy())->decode('SRID=4326;POINT (1 2)');
+        new WktDecoderStrategy()->decode('SRID=4326;POINT (1 2)');
     }
 
     /**
@@ -160,7 +157,7 @@ class PointWktDecoderTest extends TestCase
     #[DataProvider('coordinateDimensionWkts')]
     public function testDecodeSupportsEveryCoordinateDimension(string $wkt, array $expectedCoordinates, bool $hasZ, bool $hasM): void
     {
-        $point = (new WktDecoderStrategy())->decode($wkt);
+        $point = new WktDecoderStrategy()->decode($wkt);
 
         self::assertInstanceOf(PointInterface::class, $point);
         self::assertSame($expectedCoordinates, $point->toArray());
@@ -173,6 +170,6 @@ class PointWktDecoderTest extends TestCase
     {
         $this->expectException(LogicException::class);
 
-        (new WktPointFactory())->createPoint(CoordinateDimensionEnum::XY, [1]);
+        new WktPointFactory()->createPoint(CoordinateDimensionEnum::XY, [1]);
     }
 }

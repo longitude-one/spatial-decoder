@@ -1,14 +1,11 @@
 <?php
-/**
- * This file is part of the spatial-decoder project.
+
+/*
+ * This file is part of the LongitudeOne Spatial project.
  *
- * PHP 8.4 | 8.5
+ * Copyright (c) 2026 Alexandre Tranchant <alexandre.tranchant@gmail.com>
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
- * Copyright Longitude One 2026
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * See LICENSE for copyright and license information.
  *
  */
 
@@ -37,7 +34,7 @@ final class EwktDecoderStrategy implements StringDecoderStrategyInterface
     {
         $cursor = new WktTokenCursor($data);
         if (!$cursor->isNextToken(Lexer::T_SRID)) {
-            return (new WktParserFactory())->createFromCursor($cursor, WktDialect::EWKT)->parse();
+            return new WktParserFactory()->createFromCursor($cursor, WktDialect::EWKT)->parse();
         }
 
         $cursor->moveNext();
@@ -55,7 +52,7 @@ final class EwktDecoderStrategy implements StringDecoderStrategyInterface
 
         $this->consume($cursor, Lexer::T_SEMICOLON);
 
-        return (new WktParserFactory())->createFromCursor($cursor, WktDialect::EWKT)->parse()->withSrid($srid);
+        return new WktParserFactory()->createFromCursor($cursor, WktDialect::EWKT)->parse()->withSrid($srid);
     }
 
     /**

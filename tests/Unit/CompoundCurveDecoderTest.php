@@ -1,14 +1,11 @@
 <?php
-/**
- * This file is part of the spatial-decoder project.
+
+/*
+ * This file is part of the LongitudeOne Spatial project.
  *
- * PHP 8.4 | 8.5
+ * Copyright (c) 2026 Alexandre Tranchant <alexandre.tranchant@gmail.com>
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
- * Copyright Longitude One 2026
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * See LICENSE for copyright and license information.
  *
  */
 
@@ -86,21 +83,21 @@ class CompoundCurveDecoderTest extends TestCase
             'COMPOUNDCURVEM EMPTY' => CoordinateDimensionEnum::XYM,
             'COMPOUNDCURVEZM EMPTY' => CoordinateDimensionEnum::XYZM,
         ] as $input => $dimension) {
-            $empty = (new EwktDecoderStrategy())->decode($input);
+            $empty = new EwktDecoderStrategy()->decode($input);
             self::assertInstanceOf(CompoundCurveInterface::class, $empty);
             self::assertSame($dimension, $empty->getDimension());
         }
 
-        $closed = (new WktDecoderStrategy())->decode('COMPOUNDCURVE ((0 0,1 1,0 0))');
+        $closed = new WktDecoderStrategy()->decode('COMPOUNDCURVE ((0 0,1 1,0 0))');
         self::assertInstanceOf(CompoundCurveInterface::class, $closed);
         self::assertSame([[0, 0], [1, 1], [0, 0]], $closed->getCurve(0)->toArray());
 
-        $inferred = (new EwktDecoderStrategy())->decode('COMPOUNDCURVE ((0 0 1,1 1 2),CIRCULARSTRING (1 1 2,2 0 3,3 1 4))');
+        $inferred = new EwktDecoderStrategy()->decode('COMPOUNDCURVE ((0 0 1,1 1 2),CIRCULARSTRING (1 1 2,2 0 3,3 1 4))');
         self::assertInstanceOf(CompoundCurveInterface::class, $inferred);
         self::assertSame(CoordinateDimensionEnum::XYZ, $inferred->getDimension());
         self::assertSame(CoordinateDimensionEnum::XYZ, $inferred->getCurve(1)->getDimension());
 
-        $nested = (new EwktDecoderStrategy())->decode('SRID=4326;GEOMETRYCOLLECTION (COMPOUNDCURVE ((0 0,1 1),CIRCULARSTRING (1 1,2 0,3 1)))');
+        $nested = new EwktDecoderStrategy()->decode('SRID=4326;GEOMETRYCOLLECTION (COMPOUNDCURVE ((0 0,1 1),CIRCULARSTRING (1 1,2 0,3 1)))');
         self::assertInstanceOf(CollectionInterface::class, $nested);
         $nestedCurve = $nested->getElements()[0];
         self::assertInstanceOf(CompoundCurveInterface::class, $nestedCurve);
@@ -111,7 +108,7 @@ class CompoundCurveDecoderTest extends TestCase
     /** Root EWKT SRID is retained by the compound curve, parts, and their points. */
     public function testEwktPropagatesSridToComponents(): void
     {
-        $curve = (new EwktDecoderStrategy())->decode('SRID=4326;COMPOUNDCURVE Z ((0 0 1,1 1 2),CIRCULARSTRING (1 1 2,2 0 3,3 1 4))');
+        $curve = new EwktDecoderStrategy()->decode('SRID=4326;COMPOUNDCURVE Z ((0 0 1,1 1 2),CIRCULARSTRING (1 1 2,2 0 3,3 1 4))');
         self::assertInstanceOf(CompoundCurveInterface::class, $curve);
         self::assertSame(4326, $curve->getSrid());
 
@@ -198,13 +195,13 @@ class CompoundCurveDecoderTest extends TestCase
     public function testWktRejectsSrid(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        (new WktDecoderStrategy())->decode('SRID=4326;COMPOUNDCURVE EMPTY');
+        new WktDecoderStrategy()->decode('SRID=4326;COMPOUNDCURVE EMPTY');
     }
 
     /** Standard WKT requires an explicit marker for non-XY coordinates. */
     public function testWktRequiresDimensionMarkerForNonXyCoordinates(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        (new WktDecoderStrategy())->decode('COMPOUNDCURVE ((0 0 1,1 1 2),CIRCULARSTRING (1 1 2,2 0 3,3 1 4))');
+        new WktDecoderStrategy()->decode('COMPOUNDCURVE ((0 0 1,1 1 2),CIRCULARSTRING (1 1 2,2 0 3,3 1 4))');
     }
 }

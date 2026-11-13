@@ -1,14 +1,11 @@
 <?php
-/**
- * This file is part of the spatial-decoder project.
+
+/*
+ * This file is part of the LongitudeOne Spatial project.
  *
- * PHP 8.4 | 8.5
+ * Copyright (c) 2026 Alexandre Tranchant <alexandre.tranchant@gmail.com>
  *
- * Copyright Alexandre Tranchant <alexandre.tranchant@gmail.com> 2026
- * Copyright Longitude One 2026
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * See LICENSE for copyright and license information.
  *
  */
 
@@ -67,7 +64,7 @@ class ExceptionTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageIsOrContains('The supplied WKT geometry type is not supported. Invalid WKT input: "FOO(42 42)".');
 
-        (new Decoder(new EwktDecoderStrategy()))->decode('FOO(42 42)');
+        new Decoder(new EwktDecoderStrategy())->decode('FOO(42 42)');
     }
 
     /**
@@ -84,7 +81,7 @@ class ExceptionTest extends TestCase
 
         $toParse = \sprintf('%s(42 42)', $notInstantiableType);
 
-        (new Decoder(new EwktDecoderStrategy()))->decode($toParse);
+        new Decoder(new EwktDecoderStrategy())->decode($toParse);
     }
 
     /** Ensure the non-instantiable exception exposes the correct message and geometry type. */
@@ -109,6 +106,6 @@ class ExceptionTest extends TestCase
 
         $toParse = \sprintf('%s(42 42)', $notYetImplemented);
 
-        (new Decoder(new EwktDecoderStrategy()))->decode($toParse);
+        new Decoder(new EwktDecoderStrategy())->decode($toParse);
     }
 }
