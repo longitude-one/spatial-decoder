@@ -213,5 +213,5 @@ non-instantiable types should now catch the dedicated exception or the common
 ## Installation
 
 ```bash
-composer require longitude-one/spatial-decoder:1.0.0-RC.0
+composer require longitude-one/spatial-decoder:^1.0.0-RC.0
 ```
