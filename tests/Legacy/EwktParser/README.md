@@ -95,7 +95,7 @@ PHP's argument-count check before parsing.
 The old parser initialized its result-array `srid` field to `null` when no SRID
 prefix was supplied. Historical fixture values retain that `null` for traceability.
 The current EWKT strategy returns spatial objects whose default SRID is `0`, as
-documented in the [public usage examples](../../../README.md#ewkt-decoding).
+documented in the [public usage examples](../../../docs/decoding.md#ewkt-decoding).
 
 [SpecificTestCase](Utils/SpecificTestCase.php) explicitly compares
 `$expectedSrid ?? 0` with `getSrid()` in both `assertParsed()` and

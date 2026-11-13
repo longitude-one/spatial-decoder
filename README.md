@@ -1,217 +1,57 @@
 # Spatial Decoder
 
-The decoder module provides an interface for decoding spatial data into
-`SpatialInterface` objects.
+[![Release](https://img.shields.io/github/v/release/longitude-one/spatial-decoder?include_prereleases&sort=semver&label=release)](https://github.com/longitude-one/spatial-decoder/releases)
+[![PHP](https://img.shields.io/packagist/php-v/longitude-one/spatial-decoder?label=php)](https://packagist.org/packages/longitude-one/spatial-decoder)
+[![License](https://img.shields.io/packagist/l/longitude-one/spatial-decoder)](https://github.com/longitude-one/spatial-decoder/blob/main/LICENSE)
+[![CI](https://github.com/longitude-one/spatial-decoder/actions/workflows/ci.yml/badge.svg)](https://github.com/longitude-one/spatial-decoder/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/longitude-one/spatial-decoder/branch/main/graph/badge.svg)](https://codecov.io/gh/longitude-one/spatial-decoder/tree/main)
+[![Monthly downloads](https://img.shields.io/packagist/dm/longitude-one/spatial-decoder)](https://packagist.org/packages/longitude-one/spatial-decoder)
+[![Documentation](https://img.shields.io/badge/docs-v1-blue)](https://www.longitude-one.fr/spatial-decoder/v1/index.html)
 
-This library provides five strategies for decoding spatial data from different formats:
-
-* A strategy for decoding Extended Well-Known Binary (EWKB) into spatial interfaces.
-* A strategy for decoding ISO Well-Known Binary (WKB) into spatial interfaces.
-* A strategy for decoding the internal MySQL storage format into spatial interfaces.
-* A strategy for decoding Well-Known Text (WKT) into spatial interfaces.
-* A strategy for decoding Extended Well-Known Text (EWKT), including SRID
-  information, into spatial interfaces.
-
-Feel free to provide additional strategies for decoding other formats into
-spatial interfaces.
-
-## Decoding and geometric validation
-
-WKT and EWKT return immutable Geometry objects from `spatial-types`
-**1.0.0-RC.1**, including immutable collection members. The output is independent
-of the shared `SpatialFactory::mutable()` / `SpatialFactory::immutable()` mode.
-The decoder and custom strategy interfaces continue to use `SpatialInterface`;
-the built-in text strategies return `ImmutableSpatialInterface`.
-
-The decoder checks representation syntax, numeric ordinates, coordinate dimensions
-and supported geometry types. Geometric validity is checked separately by the
-application after decoding. For example, single-point line strings, unclosed
-polygon rings, incomplete circular arcs, disconnected compound curves and
-nonplanar surface patches are preserved as supplied.
-
-```php
-$polygon = (new Decoder(new WktDecoderStrategy()))
-    ->decode('POLYGON ((0 0,4 0,4 4,1 1))');
-// $polygon->toArray() === [[[0, 0], [4, 0], [4, 4], [1, 1]]]
-// Validate the geometry explicitly before using it in operations requiring validity.
-```
-
-Malformed representations such as `POLYGON ((0 0,))` still raise the decoder's
-`InvalidArgumentException`. Empty parentheses are rejected; use `EMPTY` where
-supported by the format.
-
-## EWKT decoding
-
-```php
-use LongitudeOne\SpatialDecoder\Decoder;
-use LongitudeOne\SpatialDecoder\Strategy\EwktDecoderStrategy;
-
-$decoder = new Decoder(new EwktDecoderStrategy());
-$point = $decoder->decode('SRID=4326;POINT (1 2)');
-// $point->getSrid() === 4326
-
-$point = $decoder->decode('POINT (1 2)');
-// $point->getSrid() === 0
-```
-
-EWKT reuses the supported WKT geometry syntax, including explicit Z, M and ZM
-markers and EMPTY geometries. The optional `SRID=<value>;` prefix is accepted
-only before the root geometry; the reference applies to all collection members.
-Coordinates retain their original order and values.
-
-EWKT accepts separated (`POINT Z`, `POINT M`, `POINT ZM`) and compact
-(`POINTZ`, `POINTM`, `POINTZM`) dimensional markers. Without a marker or an
-inherited collection dimension, two ordinates resolve to XY, three to XYZ,
-and four to XYZM. For example, `POINT (1 2 3)` and `POINTZ (1 2 3)` produce
-the same XYZ point. XYM requires an explicit M marker, which collection
-members may inherit. Tuples must match the resolved dimension, and conflicting
-markers or mixed dimensions are rejected. Unmarked EMPTY geometries retain
-the existing XY default unless a collection dimension is inherited.
-These rules apply with or without an SRID prefix. Standard WKT decoding
-continues to require explicit markers for non-XY coordinates.
-
-SRIDs are unsigned decimal integers from `0` through `PHP_INT_MAX`, with leading
-zeroes accepted. Prefix keywords are case-insensitive and whitespace between
-tokens is accepted by the shared lexer. Negative values, signs, fractions,
-exponents, overflow and nested prefixes raise the decoder's
-`InvalidArgumentException`. WKT decoding continues to reject SRID prefixes.
-
-This implements the SRID extension of [PostGIS EWKT](https://postgis.net/docs/ST_GeomFromEWKT.html)
-for the geometry syntax already supported by this decoder, not every PostGIS
-geometry type or parser extension. It preserves supported SRIDs without applying
-PostGIS-specific SRID normalization. The [PostGIS grammar](https://github.com/postgis/postgis/blob/master/liblwgeom/lwin_wkt_parse.y)
-places its optional SRID at the root; EWKT is a vendor extension, not OGC WKT.
-
-## CircularString decoding
-
-WKT and EWKT decode `CIRCULARSTRING` into dimension-specific
-`CircularStringInterface` objects. The ordered control points are preserved
-without linearizing the curve. XY, XYZ, XYM, XYZM and EMPTY are supported,
-including inside geometry collections.
-
-```php
-$curve = (new Decoder(new EwktDecoderStrategy()))
-    ->decode('SRID=4326;CIRCULARSTRING (0 0,1 1,2 0,3 -1,4 0)');
-// $curve->toArray() === [[0, 0], [1, 1], [2, 0], [3, -1], [4, 0]]
-// $curve->getSrid() === 4326
-```
-
-The existing dialect rules apply: WKT requires separated dimension markers
-for non-XY coordinates and rejects SRID prefixes; EWKT also accepts compact
-markers and infers XYZ/XYZM from unmarked coordinates. EMPTY preserves its
-explicit or inherited dimension, defaulting to XY otherwise.
-
-In WKT collections, a member may inherit a dimension marker from an explicitly
-marked ancestor collection, but never from a preceding sibling. This also
-applies to nested collections and EMPTY members. For example,
-`GEOMETRYCOLLECTION (POINT Z EMPTY,CIRCULARSTRING (0 0 2,1 1 3,2 0 4))`
-is rejected by WKT; declare `GEOMETRYCOLLECTION Z` or mark the curve `Z`.
-EWKT retains its existing dimension inference and collection propagation.
-
-Control-point count and arc validity are left to explicit application
-validation. The decoder preserves the supplied control points, including
-incomplete arcs, closed circles and collinear points.
-
-Circular-string WKT syntax is based on ISO/IEC CD 13249-3:201x(E), the available
-2009-01-16 Committee Draft, clause 5.1.57 (grammar and Description 1(e)).
-This SQL/MM geometry is distinct from the OGC Simple Features geometry subset;
-EWKT remains a vendor extension.
-
-## CompoundCurve decoding
-
-WKT and EWKT decode `COMPOUNDCURVE` into `CompoundCurveInterface` objects,
-preserving each ordered linear or circular component without flattening or
-linearizing it. XY, XYZ, XYM, XYZM and EMPTY are supported, including inside
-geometry collections. Components share the containing curve's dimension.
-
-```php
-$curve = (new Decoder(new EwktDecoderStrategy()))
-    ->decode('SRID=4326;COMPOUNDCURVE ((0 0,1 1),CIRCULARSTRING (1 1,2 0,3 1))');
-// $curve->getCurve(0) is a LineStringInterface
-// $curve->getCurve(1) is a CircularStringInterface
-// $curve->getSrid() === 4326 (also applied to components and their points)
-```
-
-Linear components use parenthesized coordinates without a `LINESTRING` keyword;
-circular components use `CIRCULARSTRING`. This follows ISO/IEC CD
-13249-3:201x(E), the available 2009-01-16 Committee Draft, clause 5.1.57,
-`<single curve text>`. Typed `LINESTRING` components are rejected in both dialects.
-The existing WKT/EWKT dimension and SRID rules apply. Component continuity and
-geometric validity are left to explicit application validation. Disconnected
-components and empty circular components are preserved; malformed component
-syntax raises the decoder's `InvalidArgumentException`.
-
-## Recognized types awaiting implementation
-
-`LongitudeOne\SpatialDecoder\Exception\NotYetImplementedException` is available
-for strategies that recognize a valid spatial type whose spatial object cannot
-yet be instantiated. Construct it with the recognized `GeometryTypeEnum` value:
-
-```php
-throw new \LongitudeOne\SpatialDecoder\Exception\NotYetImplementedException(\LongitudeOne\Core\Enum\GeometryTypeEnum::CURVEPOLYGON);
-```
-
-The exception implements `DecoderExceptionInterface` and extends `\RuntimeException`.
-Consumers can retrieve the same enum value with `getSpatialType()`; its message
-identifies that type and states that decoding is not yet implemented. It is
-independent of the input format.
-
-The shared WKT/EWKT lexer uses `SpatialTypeImplementationStatus` from
-`longitude-one/spatial-types` **1.0.0-RC.1** to classify recognized geometry
-keywords. `CURVEPOLYGON`, `MULTICURVE`,
-`MULTISURFACE`, and `TIN` raise `NotYetImplementedException`. Non-instantiable
-enum types raise `NonInstantiableGeometryTypeException`. Implemented types
-continue to the representation-specific parsers. EWKT supports `POINT`,
-`LINESTRING`, `CIRCULARSTRING`, `COMPOUNDCURVE`, `POLYGON`, `TRIANGLE`,
-`POLYHEDRALSURFACE`, `MULTIPOINT`,
-`MULTILINESTRING`, `MULTIPOLYGON`, and `GEOMETRYCOLLECTION`, including nested
-collections and supported EMPTY values. Standard WKT retains its existing
-geometry set, adds `CIRCULARSTRING` and `COMPOUNDCURVE`, and does not decode
-`TRIANGLE` or `POLYHEDRALSURFACE`.
-
-EWKT triangles support XY, XYZ, XYM, and XYZM. Polyhedral surfaces require XYZ
-or XYZM, including for EMPTY values; XY and XYM raise `InvalidArgumentException`,
-not `NotYetImplementedException`. Triangle rings and polyhedral patches are
-preserved without checking their geometric validity. Root SRID, coordinates,
-dimensions, and the geometry family are preserved recursively.
-
-Classification happens during lexical scanning, before grammar validation,
-including inside collections. A recognized unimplemented keyword therefore
-raises this exception even if its body or surrounding input is malformed.
-The exception reports an implementation limitation; it does not certify that
-the complete input is valid. Unknown keywords and malformed input without an
-unimplemented keyword retain the existing invalid-input handling.
-
-## Non-instantiable geometry types
-
-WKT and EWKT reject every type for which `GeometryTypeEnum::isInstantiable()`
-returns `false` (`GEOMETRY`, `CURVE`, `SURFACE`, and `SOLID`) with
-`LongitudeOne\SpatialDecoder\Exception\NonInstantiableGeometryTypeException`.
-Its message identifies the recognized type and states that it is not instantiable;
-`getSpatialType()` returns the corresponding enum value. The exception implements
-`DecoderExceptionInterface` and extends PHP's `\InvalidArgumentException`.
-
-This classification happens in the shared lexer, before spatial object creation
-or body validation, including for nested collection members. It is distinct from
-`NotYetImplementedException` for recognized instantiable types awaiting implementation
-and the decoder's `InvalidArgumentException` for unknown geometry names.
-Consumers previously catching the decoder's `InvalidArgumentException` for
-non-instantiable types should now catch the dedicated exception or the common
-`DecoderExceptionInterface`.
-
-## Current status
-
-![longitude-one/spatial--decoder](https://img.shields.io/badge/longitude--one-spatial--decoder-blue)
-![Stable release](https://img.shields.io/github/v/release/longitude-one/spatial-decoder)
-![Minimum PHP Version](https://img.shields.io/packagist/php-v/longitude-one/spatial-decoder.svg?maxAge=3600)
-[![Packagist License](https://img.shields.io/packagist/l/longitude-one/spatial-decoder)](https://github.com/longitude-one/spatial-decoder/blob/main/LICENSE)
-
-[![Last integration test](https://github.com/longitude-one/spatial-decoder/actions/workflows/ci.yml/badge.svg)](https://github.com/longitude-one/spatial-decoder/actions/workflows/ci.yml)
-[![Downloads](https://img.shields.io/packagist/dm/longitude-one/spatial-decoder.svg)](https://packagist.org/packages/longitude-one/spatial-decoder)
-[![codecov](https://codecov.io/gh/longitude-one/spatial-decoder/branch/main/graph/badge.svg)](https://codecov.io/gh/longitude-one/spatial-decoder)
+Decode serialized spatial data into LongitudeOne spatial objects.
+Choose a strategy for the input format, then validate the resulting geometry explicitly
+when your application requires geometric validity.
 
 ## Installation
 
 ```bash
 composer require longitude-one/spatial-decoder:^1.0.0-RC.0
 ```
+
+## Usage
+
+```php
+use LongitudeOne\SpatialDecoder\Decoder;
+use LongitudeOne\SpatialDecoder\Strategy\WktDecoderStrategy;
+
+$decoder = new Decoder(new WktDecoderStrategy());
+$point = $decoder->decode('POINT (1 2)');
+
+// $point->toArray() === [1, 2]
+```
+
+## Documentation
+
+Read the [official documentation](https://www.longitude-one.fr/spatial-decoder/v1/index.html).
+
+See the [decoding guide](docs/decoding.md) for EWKT, curves, dimensions and unsupported types.
+
+## Input formats
+
+Built-in strategies cover WKT, EWKT, ISO WKB, PostGIS EWKB and MySQL internal binary.
+Support for individual geometry types depends on the strategy; recognition of a type
+does not imply that decoding it is implemented.
+
+## Decoding and geometric validation
+
+WKT and EWKT produce immutable Geometry objects, including collection members,
+independently of the shared factory's mutable/immutable mode.
+
+The decoder checks syntax, numeric ordinates, dimensions and supported types.
+It preserves geometrically invalid structures such as unclosed polygon rings;
+decoding success does not establish geometric validity. Malformed representations
+still raise an exception. See the [validation boundary](docs/decoding.md#decoding-and-geometric-validation).
+
+## Contributing
+
+See [Contributing](CONTRIBUTING.md) for development setup, checks and contribution guidelines.
