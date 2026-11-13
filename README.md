@@ -1,6 +1,7 @@
 # Spatial Decoder
 
-The decoder module provides an interface for decoding spatial data into `SpatialInterface` objects.
+The decoder module provides an interface for decoding spatial data into
+`SpatialInterface` objects.
 
 This library provides five strategies for decoding spatial data from different formats:
 
@@ -8,9 +9,11 @@ This library provides five strategies for decoding spatial data from different f
 * A strategy for decoding ISO Well-Known Binary (WKB) into spatial interfaces.
 * A strategy for decoding the internal MySQL storage format into spatial interfaces.
 * A strategy for decoding Well-Known Text (WKT) into spatial interfaces.
-* A strategy for decoding Extended Well-Known Text (EWKT), including SRID information, into spatial interfaces.
+* A strategy for decoding Extended Well-Known Text (EWKT), including SRID
+  information, into spatial interfaces.
 
-Feel free to provide additional strategies for decoding other formats into spatial interfaces.
+Feel free to provide additional strategies for decoding other formats into
+spatial interfaces.
 
 ## Decoding and geometric validation
 
@@ -159,10 +162,12 @@ keywords. `CURVEPOLYGON`, `MULTICURVE`,
 `MULTISURFACE`, and `TIN` raise `NotYetImplementedException`. Non-instantiable
 enum types raise `NonInstantiableGeometryTypeException`. Implemented types
 continue to the representation-specific parsers. EWKT supports `POINT`,
-`LINESTRING`, `CIRCULARSTRING`, `COMPOUNDCURVE`, `POLYGON`, `TRIANGLE`, `POLYHEDRALSURFACE`, `MULTIPOINT`,
+`LINESTRING`, `CIRCULARSTRING`, `COMPOUNDCURVE`, `POLYGON`, `TRIANGLE`,
+`POLYHEDRALSURFACE`, `MULTIPOINT`,
 `MULTILINESTRING`, `MULTIPOLYGON`, and `GEOMETRYCOLLECTION`, including nested
 collections and supported EMPTY values. Standard WKT retains its existing
-geometry set, adds `CIRCULARSTRING` and `COMPOUNDCURVE`, and does not decode `TRIANGLE` or `POLYHEDRALSURFACE`.
+geometry set, adds `CIRCULARSTRING` and `COMPOUNDCURVE`, and does not decode
+`TRIANGLE` or `POLYHEDRALSURFACE`.
 
 EWKT triangles support XY, XYZ, XYM, and XYZM. Polyhedral surfaces require XYZ
 or XYZM, including for EMPTY values; XY and XYM raise `InvalidArgumentException`,
@@ -195,6 +200,7 @@ non-instantiable types should now catch the dedicated exception or the common
 `DecoderExceptionInterface`.
 
 ## Current status
+
 ![longitude-one/spatial--decoder](https://img.shields.io/badge/longitude--one-spatial--decoder-blue)
 ![Stable release](https://img.shields.io/github/v/release/longitude-one/spatial-decoder)
 ![Minimum PHP Version](https://img.shields.io/packagist/php-v/longitude-one/spatial-decoder.svg?maxAge=3600)

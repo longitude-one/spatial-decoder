@@ -43,15 +43,35 @@ ported to the public decoding API.
 
 ## Exception classes and messages
 
-In the table, historical classes belong to `LongitudeOne\Geo\WKT\Exception`;
+Historical classes belong to `LongitudeOne\Geo\WKT\Exception`;
 current classes belong to `LongitudeOne\SpatialDecoder\Exception`.
 
-| Historical expectation                              | Migrated expectation.                                   | Reason and traceability                                                                                                                                                                                                                                                |
-| --------------------------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `NotExistentException` for unknown types            | `InvalidArgumentException`                              | `ParserTest::notExistentValuesProvider()`, `testUnexpectedType()` and `ExceptionTest::testNotExistentException()` now exercise decoder rejection of unsupported geometry types. Messages identify the invalid input instead of repeating the old ISO-labelled wording. |
-| `UnexpectedValueException` for malformed input      | `InvalidArgumentException`                              | `ParserTest::unexpectedValues()` retains the invalid inputs and named cases. Expected messages now describe SRID prefix, coordinate dimension, or syntax failures from the current decoder, rather than the old lexer's token names and line/column offsets.           |
-| `NotInstantiableException`                          | `NonInstantiableGeometryTypeException`                  | The abstract-type providers in `ParserTest` and `ExceptionTest` use the decoder's dedicated exception. Messages name the recognized enum type; historical “Did you mean” suggestions and ISO-labelled wording are not retained.                                        |
-| `NotYetImplementedException` from the old namespace | `NotYetImplementedException` from the decoder namespace | `ExceptionTest::notYetImplementedTypes()` expects the decoder's message, `Decoding of spatial type "…" is not yet implemented.`, rather than a message naming the old `Parser` class.                                                                                  |
+- Historical expectation: `NotExistentException` for unknown types.
+  Migrated expectation: `InvalidArgumentException`.
+  Reason and traceability: `ParserTest::notExistentValuesProvider()`,
+  `testUnexpectedType()` and `ExceptionTest::testNotExistentException()` now
+  exercise decoder rejection of unsupported geometry types. Messages identify
+  the invalid input instead of repeating the old ISO-labelled wording.
+
+- Historical expectation: `UnexpectedValueException` for malformed input.
+  Migrated expectation: `InvalidArgumentException`.
+  Reason and traceability: `ParserTest::unexpectedValues()` retains the invalid
+  inputs and named cases. Expected messages now describe SRID prefix, coordinate
+  dimension, or syntax failures from the current decoder, rather than the old
+  lexer's token names and line/column offsets.
+
+- Historical expectation: `NotInstantiableException`.
+  Migrated expectation: `NonInstantiableGeometryTypeException`.
+  Reason and traceability: The abstract-type providers in `ParserTest` and
+  `ExceptionTest` use the decoder's dedicated exception. Messages name the
+  recognized enum type; historical “Did you mean” suggestions and ISO-labelled
+  wording are not retained.
+
+- Historical expectation: `NotYetImplementedException` from the old namespace.
+  Migrated expectation: `NotYetImplementedException` from the decoder namespace.
+  Reason and traceability: `ExceptionTest::notYetImplementedTypes()` expects the
+  decoder's message, `Decoding of spatial type "…" is not yet implemented.`,
+  rather than a message naming the old `Parser` class.
 
 These are adaptations to the existing implementation and exception API, not
 new normative claims or a guarantee of identical diagnostics between libraries.
