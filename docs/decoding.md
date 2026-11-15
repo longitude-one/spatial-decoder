@@ -1,6 +1,6 @@
 # Decoding spatial data
 
-Turn WKT or EWKT text into immutable Geometry objects.
+Turn WKT or EWKT text into spatial objects. The default output is immutable Geometry.
 These formats describe points, lines, polygons and collections using readable coordinates.
 See [the README](../README.md) for installation.
 
@@ -16,8 +16,9 @@ $point = $decoder->decode('POINT (1 2)');
 // $point->toArray() === [1, 2]
 ```
 
-Coordinates keep their original order and values. The result is immutable,
+Coordinates keep their original order and values. By default the result is immutable,
 independently of the shared factory's mutable/immutable mode.
+See [Strategy configuration](strategy-configuration.md) to select Geography or mutable output.
 
 ## EWKT decoding
 

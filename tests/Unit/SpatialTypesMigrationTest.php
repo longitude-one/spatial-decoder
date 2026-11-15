@@ -64,6 +64,7 @@ class SpatialTypesMigrationTest extends TestCase
         try {
             foreach ([new WktDecoderStrategy(), new EwktDecoderStrategy()] as $strategy) {
                 $geometry = $strategy->decode('GEOMETRYCOLLECTION (POINT (1 2),GEOMETRYCOLLECTION (LINESTRING (3 4)))');
+                self::assertInstanceOf(ImmutableSpatialInterface::class, $geometry);
                 $this->assertImmutableGraph($geometry, 0);
                 $copy = $geometry->withSrid(4326);
                 $this->assertImmutableGraph($copy, 4326);

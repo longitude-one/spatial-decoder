@@ -13,28 +13,45 @@ declare(strict_types=1);
 
 namespace LongitudeOne\SpatialDecoder\Strategy;
 
+use LongitudeOne\Core\Enum\SpatialModelEnum;
 use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialDecoder\Strategy\Common\Lexer;
+use LongitudeOne\SpatialDecoder\Strategy\Wkt\DecodedSpatialBuilder;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\Parser\WktParserFactory;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktDialect;
 use LongitudeOne\SpatialDecoder\Strategy\Wkt\WktTokenCursor;
-use LongitudeOne\SpatialTypes\Interfaces\ImmutableSpatialInterface;
+use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * Decode supported EWKT geometries with an optional root spatial reference.
  */
-final class EwktDecoderStrategy implements StringDecoderStrategyInterface
+final class EwktDecoderStrategy extends AbstractConfigurableStrategy implements StringDecoderStrategyInterface
 {
+    /**
+     * Declare the representation used for the complete decoded graph.
+     *
+     * @param OptionsResolver $resolver the local options resolver
+     */
+    public function configureOptions(OptionsResolver $resolver): void
+    {
+        $resolver->setDefaults(['mode' => SpatialModelEnum::GEOMETRY, 'mutable' => false]);
+        $resolver->setAllowedTypes('mode', SpatialModelEnum::class);
+        $resolver->setAllowedTypes('mutable', 'bool');
+    }
+
     /**
      * Decode the EWKT prefix and delegate the geometry to the WKT parser.
      *
      * @param string $data EWKT text to decode
      */
-    public function decode(string $data): ImmutableSpatialInterface
+    public function decode(string $data): SpatialInterface
     {
         $cursor = new WktTokenCursor($data);
         if (!$cursor->isNextToken(Lexer::T_SRID)) {
-            return new WktParserFactory()->createFromCursor($cursor, WktDialect::EWKT)->parse();
+            $spatial = new WktParserFactory()->createFromCursor($cursor, WktDialect::EWKT)->parse();
+
+            return DecodedSpatialBuilder::fromOptions($this->options)->build($spatial);
         }
 
         $cursor->moveNext();
@@ -52,7 +69,9 @@ final class EwktDecoderStrategy implements StringDecoderStrategyInterface
 
         $this->consume($cursor, Lexer::T_SEMICOLON);
 
-        return new WktParserFactory()->createFromCursor($cursor, WktDialect::EWKT)->parse()->withSrid($srid);
+        $spatial = new WktParserFactory()->createFromCursor($cursor, WktDialect::EWKT)->parse()->withSrid($srid);
+
+        return DecodedSpatialBuilder::fromOptions($this->options)->build($spatial);
     }
 
     /**
