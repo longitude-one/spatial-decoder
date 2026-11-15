@@ -18,6 +18,7 @@ use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialDecoder\Strategy\EwktDecoderStrategy;
 use LongitudeOne\SpatialDecoder\Strategy\WktDecoderStrategy;
 use LongitudeOne\SpatialTypes\Interfaces\CollectionInterface;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutableSpatialInterface;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -107,7 +108,9 @@ class EwktDecoderTest extends TestCase
     #[DataProvider('geometries')]
     public function testDecodeWithSpatialReference(string $wkt): void
     {
-        $expected = new WktDecoderStrategy()->decode($wkt)->withSrid(4326);
+        $expected = new WktDecoderStrategy()->decode($wkt);
+        self::assertInstanceOf(ImmutableSpatialInterface::class, $expected);
+        $expected = $expected->withSrid(4326);
         $actual = new Decoder(new EwktDecoderStrategy())->decode('SRID=4326;'.$wkt);
 
         self::assertEquals($expected, $actual);

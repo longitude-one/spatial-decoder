@@ -44,8 +44,9 @@ does not imply that decoding it is implemented.
 
 ## Decoding and geometric validation
 
-WKT and EWKT produce immutable Geometry objects, including collection members,
+By default, WKT and EWKT produce immutable Geometry objects, including collection members,
 independently of the shared factory's mutable/immutable mode.
+See [Strategy configuration](docs/strategy-configuration.md) to select Geography or mutable output.
 
 The decoder checks syntax, numeric ordinates, dimensions and supported types.
 It preserves geometrically invalid structures such as unclosed polygon rings;

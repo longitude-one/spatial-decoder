@@ -16,6 +16,7 @@ namespace LongitudeOne\SpatialDecoder\Tests\Unit;
 use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialDecoder\Strategy\EwktDecoderStrategy;
 use LongitudeOne\SpatialDecoder\Strategy\WktDecoderStrategy;
+use LongitudeOne\SpatialTypes\Interfaces\ImmutableSpatialInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -94,6 +95,7 @@ class EwktDimensionTest extends TestCase
     public function testEquivalentRepresentations(string $ewkt, string $wkt): void
     {
         $expected = new WktDecoderStrategy()->decode($wkt);
+        self::assertInstanceOf(ImmutableSpatialInterface::class, $expected);
         $strategy = new EwktDecoderStrategy();
         self::assertEquals($expected, $strategy->decode($ewkt));
         self::assertEquals($expected->withSrid(4326), $strategy->decode('SRID=4326;'.$ewkt));
