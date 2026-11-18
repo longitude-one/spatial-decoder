@@ -38,8 +38,8 @@ See the [decoding guide](docs/decoding.md) for EWKT, WKB Points, curves, dimensi
 
 ## Input formats
 
-Built-in strategies decode WKT and EWKT, plus non-empty XY Points in raw WKB
-(both byte orders). WKB dimensions, EMPTY Points and other geometry types are not
+Built-in strategies decode WKT and EWKT, plus XY, XYZ, XYM and XYZM Points in raw WKB
+(both byte orders), including EMPTY Points. Other WKB geometry types are not
 yet supported. EWKB and MySQL internal binary are not supported.
 
 ## Decoding and geometric validation

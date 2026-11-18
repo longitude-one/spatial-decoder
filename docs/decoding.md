@@ -40,7 +40,7 @@ geometry: it applies to every collection member. Use an unsigned integer from
 
 ## WKB decoding
 
-Use `WkbDecoderStrategy` for a raw binary, non-empty XY Point. Both little-endian
+Use `WkbDecoderStrategy` for raw binary Points in XY, XYZ, XYM or XYZM, including EMPTY. Both little-endian
 and big-endian inputs are supported, following OGC Simple Feature Access 1.2.1,
 section 8 (numeric encoding in 8.2.2–8.2.5 and Point structure in 8.2.8).
 
@@ -61,8 +61,30 @@ accepts only raw bytes. The X and Y ordinates retain their order and values.
 WKB carries no SRID, so output uses SRID `0`, as WKT does. The `mode` and `mutable`
 options have the same defaults and accepted values as the text strategies.
 
-This first delivery rejects other geometry types, XYZ/XYM/XYZM, EMPTY Points,
-NaN ordinates, hexadecimal text, EWKB and MySQL binary wrappers. Empty input,
+The type identifier determines the layout; coordinate count never changes it:
+
+| Layout | Type identifier | Ordinates |
+| --- | ---: | --- |
+| XY | 1 | X, Y |
+| XYZ | 1001 | X, Y, Z |
+| XYM | 2001 | X, Y, M |
+| XYZM | 3001 | X, Y, Z, M |
+
+The dimensional identifiers and ordinate order follow ISO/IEC CD 13249-3:201x(E),
+clause 5.1.58, Table 15 and rules bv–cc. This local source is a Committee Draft,
+not a final published edition. These dimensional layouts extend the XY scope
+of the Epic's OGC reference. M remains a measure, distinct from Z.
+
+EMPTY follows the existing LongitudeOne WKB encoder convention: every ordinate
+is an IEEE-754 quiet NaN (`7ff8000000000000` in big-endian order,
+`000000000000f87f` in little-endian order). This interoperability convention is
+not claimed as an OGC SFA 1.2.1 requirement. All-NaN inputs produce an EMPTY
+Point with the dimension declared by the type identifier; mixed NaN and
+non-NaN ordinates are rejected. Output family and mutability apply equally to
+EMPTY Points, whose `toArray()` is `[]`.
+
+Other geometry types, unsupported dimensional identifiers, hexadecimal text,
+EWKB and MySQL binary wrappers are rejected. Empty input,
 invalid byte-order markers, truncation and trailing bytes are also rejected.
 These rejections raise the library's `InvalidArgumentException`. The strategy
 can be reused after a successful or failed decoding call.
