@@ -1,7 +1,7 @@
 # Decoding spatial data
 
-Turn WKT or EWKT text into spatial objects. The default output is immutable Geometry.
-These formats describe points, lines, polygons and collections using readable coordinates.
+Turn WKT or EWKT text, or a WKB binary Point, into spatial objects. The default output is immutable Geometry.
+The text formats describe points, lines, polygons and collections using readable coordinates.
 See [the README](../README.md) for installation.
 
 ## Decode a point
@@ -37,6 +37,35 @@ $point = $decoder->decode('SRID=4326;POINT (1 2)');
 The prefix is optional; without it, the SRID is `0`. Put it before the whole
 geometry: it applies to every collection member. Use an unsigned integer from
 `0` to `PHP_INT_MAX`. Declaring an SRID does not transform coordinates.
+
+## WKB decoding
+
+Use `WkbDecoderStrategy` for a raw binary, non-empty XY Point. Both little-endian
+and big-endian inputs are supported, following OGC Simple Feature Access 1.2.1,
+section 8 (numeric encoding in 8.2.2–8.2.5 and Point structure in 8.2.8).
+
+```php
+use LongitudeOne\SpatialDecoder\Decoder;
+use LongitudeOne\SpatialDecoder\Strategy\WkbDecoderStrategy;
+
+$decoder = new Decoder(new WkbDecoderStrategy());
+$binary = hex2bin('0101000000000000000000f03f00000000000000c0');
+$point = $decoder->decode($binary);
+
+// $point->toArray() === [1.0, -2.0]
+// $point->getSrid() === 0
+```
+
+The hexadecimal literal is converted to binary by the application; the strategy
+accepts only raw bytes. The X and Y ordinates retain their order and values.
+WKB carries no SRID, so output uses SRID `0`, as WKT does. The `mode` and `mutable`
+options have the same defaults and accepted values as the text strategies.
+
+This first delivery rejects other geometry types, XYZ/XYM/XYZM, EMPTY Points,
+NaN ordinates, hexadecimal text, EWKB and MySQL binary wrappers. Empty input,
+invalid byte-order markers, truncation and trailing bytes are also rejected.
+These rejections raise the library's `InvalidArgumentException`. The strategy
+can be reused after a successful or failed decoding call.
 
 ## Choose WKT or EWKT
 
