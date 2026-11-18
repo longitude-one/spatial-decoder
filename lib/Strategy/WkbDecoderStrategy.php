@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace LongitudeOne\SpatialDecoder\Strategy;
 
+use LongitudeOne\Core\Enum\ByteOrderEnum;
 use LongitudeOne\Core\Enum\SpatialModelEnum;
 use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialTypes\Builder\SpatialBuilder;
@@ -44,10 +45,11 @@ final class WkbDecoderStrategy extends AbstractConfigurableStrategy implements S
         if (21 !== \strlen($data)) {
             throw new InvalidArgumentException('Expected exactly 21 bytes for a non-empty WKB XY Point.');
         }
-        $format = match (\ord($data[0])) {
-            0 => 'Ntype/Ex/Ey',
-            1 => 'Vtype/ex/ey',
-            default => throw new InvalidArgumentException('Invalid WKB byte-order marker.'),
+        $byteOrder = ByteOrderEnum::tryFrom(\ord($data[0]));
+        $format = match ($byteOrder) {
+            ByteOrderEnum::BIG_ENDIAN => 'Ntype/Ex/Ey',
+            ByteOrderEnum::LITTLE_ENDIAN => 'Vtype/ex/ey',
+            null => throw new InvalidArgumentException('Invalid WKB byte-order marker.'),
         };
 
         return $this->readPoint($format, $data);
