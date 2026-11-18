@@ -14,7 +14,7 @@
     "require": {
         "php": "^8.4",
         "doctrine/lexer": "^3.0.2",
-        "longitude-one/spatial-types": "1.0.0-RC.1",
+        "longitude-one/spatial-types": "^1.0.0-RC.1",
         "symfony/options-resolver": "^5.4 || ^6.0 || ^7.0 || ^8.0"
     },
     "require-dev": {
