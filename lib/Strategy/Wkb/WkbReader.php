@@ -24,22 +24,17 @@ use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
  */
 final class WkbReader
 {
-    private readonly ByteOrderEnum $byteOrder;
+    private ByteOrderEnum $byteOrder;
 
-    private int $offset = 1;
+    private int $offset = 0;
 
     /**
-     * Validate the header before unpacking any multibyte field.
+     * Keep the cursor local to one decoding call.
      *
      * @param string $data complete input bytes
      */
     public function __construct(private readonly string $data)
     {
-        if (5 > \strlen($data)) {
-            throw new InvalidArgumentException('Incomplete WKB header.');
-        }
-        $this->byteOrder = ByteOrderEnum::tryFrom(\ord($data[0]))
-            ?? throw new InvalidArgumentException('Invalid WKB byte-order marker.');
     }
 
     /** Reject additional data after the single root geometry. */
@@ -93,7 +88,25 @@ final class WkbReader
         return $count;
     }
 
-    /** Read a uint32 using the root byte order. */
+    /**
+     * Begin a root or member geometry using its own byte order.
+     *
+     * Collection counts must be read before descending into members: there are
+     * no parent fields after the members, so the next header selects the order
+     * for the next geometry without restoring its parent's order.
+     */
+    public function readHeader(): int
+    {
+        if (5 > \strlen($this->data) - $this->offset) {
+            throw new InvalidArgumentException('Incomplete WKB header.');
+        }
+        $this->byteOrder = ByteOrderEnum::tryFrom(\ord($this->readBytes(1)))
+            ?? throw new InvalidArgumentException('Invalid WKB byte-order marker.');
+
+        return $this->readUnsignedInteger();
+    }
+
+    /** Read a uint32 using the current geometry's byte order. */
     public function readUnsignedInteger(): int
     {
         $format = ByteOrderEnum::BIG_ENDIAN === $this->byteOrder ? 'Nvalue' : 'Vvalue';

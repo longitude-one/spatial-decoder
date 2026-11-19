@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace LongitudeOne\SpatialDecoder\Strategy;
 
 use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
+use LongitudeOne\Core\Enum\GeometryTypeEnum;
 use LongitudeOne\Core\Enum\SpatialModelEnum;
 use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialDecoder\Strategy\Wkb\WkbReader;
@@ -22,7 +23,7 @@ use LongitudeOne\SpatialTypes\Interfaces\LineStringInterface;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-/** Decode raw WKB Points, LineStrings and Polygons with SQL/MM dimensions. */
+/** Decode raw WKB geometries and nested collections with SQL/MM dimensions. */
 final class WkbDecoderStrategy extends AbstractConfigurableStrategy implements StringDecoderStrategyInterface
 {
     /**
@@ -45,18 +46,29 @@ final class WkbDecoderStrategy extends AbstractConfigurableStrategy implements S
     public function decode(string $data): SpatialInterface
     {
         $reader = new WkbReader($data);
-        $type = $reader->readUnsignedInteger();
-        $dimension = $this->readDimension($type);
-        $builder = $this->createBuilder($dimension);
-        $spatial = match ($type % 1000) {
-            1 => $this->buildPoint($builder, $dimension, $reader->readCoordinates($dimension)),
-            2 => $this->readLineString($reader, $builder, $dimension),
-            3 => $this->readPolygon($reader, $builder, $dimension),
-            default => throw new InvalidArgumentException('Unsupported WKB type identifier.'),
-        };
+        $spatial = $this->readGeometry($reader);
         $reader->finish();
 
         return $spatial;
+    }
+
+    /**
+     * Keep the declared collection type after all members have been read.
+     *
+     * @param SpatialBuilder $builder construction context
+     * @param int            $type    collection base identifier
+     * @param array          $members ordered decoded members
+     *
+     * @phpstan-param list<SpatialInterface> $members
+     */
+    private function buildCollection(SpatialBuilder $builder, int $type, array $members): SpatialInterface
+    {
+        return match ($type) {
+            4 => $builder->createMultiPoint($members),
+            5 => $builder->createMultiLineString($members),
+            6 => $builder->createMultiPolygon($members),
+            default => $builder->createCollection($members),
+        };
     }
 
     /**
@@ -92,6 +104,38 @@ final class WkbDecoderStrategy extends AbstractConfigurableStrategy implements S
     }
 
     /**
+     * Construct only after every member passes structural and contract checks.
+     *
+     * @param WkbReader               $reader    current binary cursor
+     * @param SpatialBuilder          $builder   parent construction context
+     * @param CoordinateDimensionEnum $dimension declared parent layout
+     * @param int                     $type      collection base identifier
+     */
+    private function readCollection(WkbReader $reader, SpatialBuilder $builder, CoordinateDimensionEnum $dimension, int $type): SpatialInterface
+    {
+        $count = $reader->readCount(5);
+        $expected = match ($type) {
+            4 => GeometryTypeEnum::POINT,
+            5 => GeometryTypeEnum::LINESTRING,
+            6 => GeometryTypeEnum::POLYGON,
+            default => null,
+        };
+        $members = [];
+        for ($index = 0; $index < $count; ++$index) {
+            $member = $this->readGeometry($reader);
+            if (null !== $expected && $expected !== $member->getType()) {
+                throw new InvalidArgumentException('Incompatible WKB collection member type.');
+            }
+            if ($dimension !== $member->getDimension()) {
+                throw new InvalidArgumentException('WKB collection members must use the declared coordinate dimension.');
+            }
+            $members[] = $member;
+        }
+
+        return $this->buildCollection($builder, $type, $members);
+    }
+
+    /**
      * Resolve only explicitly supported SQL/MM identifiers.
      *
      * @param int $type complete type identifier, including its dimensional offset
@@ -103,6 +147,26 @@ final class WkbDecoderStrategy extends AbstractConfigurableStrategy implements S
             1 => CoordinateDimensionEnum::XYZ,
             2 => CoordinateDimensionEnum::XYM,
             3 => CoordinateDimensionEnum::XYZM,
+            default => throw new InvalidArgumentException('Unsupported WKB type identifier.'),
+        };
+    }
+
+    /**
+     * Dispatch root and member headers through the same supported type set.
+     *
+     * @param WkbReader $reader current binary cursor
+     */
+    private function readGeometry(WkbReader $reader): SpatialInterface
+    {
+        $type = $reader->readHeader();
+        $dimension = $this->readDimension($type);
+        $builder = $this->createBuilder($dimension);
+
+        return match ($type % 1000) {
+            1 => $this->buildPoint($builder, $dimension, $reader->readCoordinates($dimension)),
+            2 => $this->readLineString($reader, $builder, $dimension),
+            3 => $this->readPolygon($reader, $builder, $dimension),
+            4, 5, 6, 7 => $this->readCollection($reader, $builder, $dimension, $type % 1000),
             default => throw new InvalidArgumentException('Unsupported WKB type identifier.'),
         };
     }
