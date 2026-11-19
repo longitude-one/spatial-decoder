@@ -47,7 +47,7 @@ final class WkbCollectionStructureTest extends TestCase
         foreach ([
             '0201000000000000000000f03f0000000000000040', // Invalid marker.
             '0101000080000000000000f03f0000000000000040', // EWKB flag.
-            '010800000000000000', // Not yet supported CircularString.
+            '010a00000000000000', // Not yet supported CurvePolygon.
             '010000000000000000', // Unknown type.
             '01a10f000000000000', // Unknown dimensional family.
             '01', // Truncated member header after a valid member.

@@ -41,7 +41,7 @@ geometry: it applies to every collection member. Use an unsigned integer from
 ## WKB decoding
 
 Use `WkbDecoderStrategy` for raw binary Point, LineString, Polygon, MultiPoint,
-MultiLineString, MultiPolygon and nested GeometryCollection in XY, XYZ, XYM or XYZM,
+MultiLineString, MultiPolygon, CircularString, CompoundCurve and nested GeometryCollection in XY, XYZ, XYM or XYZM,
 including EMPTY. Both little-endian and big-endian inputs are supported.
 The binary structures follow ISO/IEC CD 13249-3:201x(E), clause 5.1.58.
 
@@ -146,13 +146,58 @@ $multiPoint = $decoder->decode(hex2bin(
 The output family and mutability options apply to every member, ring and vertex.
 An invalid member rejects the complete input; no partial collection is returned.
 
+### WKB curves
+
+CircularString preserves its ordered control points. CompoundCurve preserves its
+ordered LineString and CircularString components, each with its own complete
+header and independent byte-order marker. Both types are supported at the root
+and inside GeometryCollection, with all four coordinate layouts.
+
+| Curve | XY | XYZ | XYM | XYZM |
+| --- | ---: | ---: | ---: | ---: |
+| CircularString | 8 | 1008 | 2008 | 3008 |
+| CompoundCurve | 9 | 1009 | 2009 | 3009 |
+
+These representations extend the Epic's OGC SFA 1.2.1 baseline. Their binary
+structures and identifiers follow ISO/IEC CD 13249-3:201x(E), clause 5.1.58,
+circular-string and compound-curve productions, rules r–y and Table 15.
+Only the identifiers listed above are supported; the draft's alternative XY
+identifiers `1000001` and `1000002` are outside the current encoder-compatible subset.
+
+```php
+$curve = $decoder->decode(hex2bin(
+    '010900000002000000' // Little-endian CompoundCurve, two components.
+    . '010200000001000000000000000000f03f0000000000000040' // LineString (1 2).
+    . '000000000800000000' // Big-endian CircularString EMPTY.
+));
+
+// $curve->toArray() === [[[1.0, 2.0]], []]
+```
+
+CircularString stores a point count followed by coordinates, without individual
+Point headers. CompoundCurve stores a component count followed by complete WKB
+geometries. A zero count produces an EMPTY curve of the declared type and
+dimension, matching the LongitudeOne encoder. EMPTY linear and circular
+components keep their types and positions.
+
+CompoundCurve accepts only LineString and CircularString components with exactly
+its declared dimension, including when EMPTY. A nested CompoundCurve component
+is rejected, consistently with the existing spatial model contract. The `mode`
+and `mutable` options apply to every component and control point.
+
+The decoder does not linearize arcs, merge components, connect disconnected parts,
+repair control points or add geometric validity checks. Constructible short or
+even-length circular sequences remain unchanged; use spatial-validator when
+geometric validity is required.
+
 ### Rejected WKB input
 
 Other geometry types, unsupported dimensional identifiers, hexadecimal text,
 EWKB and MySQL binary wrappers are rejected. Empty input,
 invalid byte-order markers, truncation, impossible element counts and trailing bytes
 are also rejected, including inside nested collections. Incompatible collection
-member types or dimensions are rejected. A declared count cannot exceed what the remaining bytes can hold.
+member types or dimensions, including CompoundCurve components, are rejected.
+A declared count cannot exceed what the remaining bytes can hold.
 These rejections raise the library's `InvalidArgumentException`. The strategy
 can be reused after a successful or failed decoding call.
 
