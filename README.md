@@ -39,7 +39,8 @@ See the [decoding guide](docs/decoding.md) for EWKT, WKB geometries, curves, dim
 ## Input formats
 
 Built-in strategies decode WKT and EWKT, plus XY, XYZ, XYM and XYZM Points, LineStrings
-and Polygons in raw WKB (both byte orders), including EMPTY geometries. Other WKB
+and Polygons, MultiPoint, MultiLineString, MultiPolygon and nested GeometryCollection
+in raw WKB (both byte orders), including EMPTY geometries. Other WKB
 geometry types are not yet supported. EWKB and MySQL internal binary are not supported.
 
 ## Decoding and geometric validation

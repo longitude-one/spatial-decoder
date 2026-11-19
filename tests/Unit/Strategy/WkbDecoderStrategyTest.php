@@ -40,7 +40,7 @@ final class WkbDecoderStrategyTest extends TestCase
         foreach (range(0, 20) as $length) {
             yield 'truncated '.$length => [substr($valid, 0, $length)];
         }
-        foreach ([0, 4, 5, 6, 7, 8, 9, 15, 16, 17, 999, 1000, 1004, 2000, 2004, 3000, 3004, 4001, 0x80000001, 0x40000001, 0x20000001] as $type) {
+        foreach ([0, 8, 9, 15, 16, 17, 999, 1000, 1008, 2000, 2008, 3000, 3008, 4001, 0x80000001, 0x40000001, 0x20000001] as $type) {
             yield 'unsupported type '.$type => ["\1".pack('V', $type).substr($valid, 5)];
         }
         yield 'EWKB SRID' => ["\1".pack('V2', 0x20000001, 4326).pack('e*', 1, 2)];

@@ -40,8 +40,9 @@ geometry: it applies to every collection member. Use an unsigned integer from
 
 ## WKB decoding
 
-Use `WkbDecoderStrategy` for raw binary Points, LineStrings and Polygons in XY, XYZ,
-XYM or XYZM, including EMPTY. Both little-endian and big-endian inputs are supported.
+Use `WkbDecoderStrategy` for raw binary Point, LineString, Polygon, MultiPoint,
+MultiLineString, MultiPolygon and nested GeometryCollection in XY, XYZ, XYM or XYZM,
+including EMPTY. Both little-endian and big-endian inputs are supported.
 The binary structures follow ISO/IEC CD 13249-3:201x(E), clause 5.1.58.
 
 ```php
@@ -105,10 +106,53 @@ vertices. Decoding does not close or reorient rings, check intersections or
 relationships between rings, or repair geometrically invalid structures.
 Constructible invalid geometries remain accepted, consistently with WKT.
 
+### WKB collections
+
+Collections preserve member count, order and geometry type. MultiPoint accepts
+only Points, MultiLineString only LineStrings, and MultiPolygon only Polygons.
+GeometryCollection accepts any supported type, including nested collections.
+Each member has its own complete WKB header and may use a different byte order
+from its parent or siblings.
+
+| Collection | XY | XYZ | XYM | XYZM |
+| --- | ---: | ---: | ---: | ---: |
+| MultiPoint | 4 | 1004 | 2004 | 3004 |
+| MultiLineString | 5 | 1005 | 2005 | 3005 |
+| MultiPolygon | 6 | 1006 | 2006 | 3006 |
+| GeometryCollection | 7 | 1007 | 2007 | 3007 |
+
+These identifiers and nested headers follow ISO/IEC CD 13249-3:201x(E),
+clause 5.1.58, collection grammar and Table 15. Every member must declare the
+same coordinate dimension as its containing collection, recursively. A member's
+header determines its dimension; the decoder never infers, converts or drops
+ordinates to match the parent. This also applies to EMPTY members and nested
+EMPTY collections.
+
+A zero member count produces an EMPTY collection of the declared type and
+dimension. EMPTY members remain separate members, preserving their positions.
+For example, this MultiPoint contains a big-endian Point followed by a
+little-endian EMPTY Point:
+
+```php
+$multiPoint = $decoder->decode(hex2bin(
+    '010400000002000000'
+    . '00000000013ff00000000000004000000000000000'
+    . '0101000000000000000000f87f000000000000f87f'
+));
+
+// $multiPoint->toArray() === [[1.0, 2.0], []]
+```
+
+The output family and mutability options apply to every member, ring and vertex.
+An invalid member rejects the complete input; no partial collection is returned.
+
+### Rejected WKB input
+
 Other geometry types, unsupported dimensional identifiers, hexadecimal text,
 EWKB and MySQL binary wrappers are rejected. Empty input,
 invalid byte-order markers, truncation, impossible element counts and trailing bytes
-are also rejected. A declared count cannot exceed what the remaining bytes can hold.
+are also rejected, including inside nested collections. Incompatible collection
+member types or dimensions are rejected. A declared count cannot exceed what the remaining bytes can hold.
 These rejections raise the library's `InvalidArgumentException`. The strategy
 can be reused after a successful or failed decoding call.
 
