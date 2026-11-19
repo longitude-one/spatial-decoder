@@ -127,7 +127,7 @@ final class WkbPointDimensionTest extends TestCase
     /** Unsupported type families must fail in both byte orders at plausible lengths. */
     public function testUnsupportedTypes(): void
     {
-        foreach ([1000, 1008, 2000, 2008, 3000, 3008, 4001, 0x80000001, 0x40000001, 0xC0000001, 0x20000001, 0xA0000001, 0xE0000001] as $type) {
+        foreach ([1000, 1010, 2000, 2010, 3000, 3010, 4001, 0x80000001, 0x40000001, 0xC0000001, 0x20000001, 0xA0000001, 0xE0000001] as $type) {
             foreach (['V', 'N'] as $format) {
                 foreach ([2, 3, 4] as $count) {
                     $input = ('V' === $format ? "\1" : "\0").pack($format, $type).str_repeat("\0", 8 * $count);

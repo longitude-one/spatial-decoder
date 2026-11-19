@@ -19,7 +19,7 @@ use LongitudeOne\Core\Enum\SpatialModelEnum;
 use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialDecoder\Strategy\Wkb\WkbReader;
 use LongitudeOne\SpatialTypes\Builder\SpatialBuilder;
-use LongitudeOne\SpatialTypes\Interfaces\LineStringInterface;
+use LongitudeOne\SpatialTypes\Interfaces\PointInterface;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -53,10 +53,10 @@ final class WkbDecoderStrategy extends AbstractConfigurableStrategy implements S
     }
 
     /**
-     * Keep the declared collection type after all members have been read.
+     * Keep the declared collection or compound-curve type after reading its members.
      *
      * @param SpatialBuilder $builder construction context
-     * @param int            $type    collection base identifier
+     * @param int            $type    aggregate base identifier
      * @param array          $members ordered decoded members
      *
      * @phpstan-param list<SpatialInterface> $members
@@ -67,6 +67,7 @@ final class WkbDecoderStrategy extends AbstractConfigurableStrategy implements S
             4 => $builder->createMultiPoint($members),
             5 => $builder->createMultiLineString($members),
             6 => $builder->createMultiPolygon($members),
+            9 => $builder->createCompoundCurve($members),
             default => $builder->createCollection($members),
         };
     }
@@ -80,7 +81,7 @@ final class WkbDecoderStrategy extends AbstractConfigurableStrategy implements S
      *
      * @phpstan-param list<float> $coordinates
      */
-    private function buildPoint(SpatialBuilder $builder, CoordinateDimensionEnum $dimension, array $coordinates): SpatialInterface
+    private function buildPoint(SpatialBuilder $builder, CoordinateDimensionEnum $dimension, array $coordinates): PointInterface
     {
         return $builder->point(
             $coordinates[0] ?? null,
@@ -109,21 +110,22 @@ final class WkbDecoderStrategy extends AbstractConfigurableStrategy implements S
      * @param WkbReader               $reader    current binary cursor
      * @param SpatialBuilder          $builder   parent construction context
      * @param CoordinateDimensionEnum $dimension declared parent layout
-     * @param int                     $type      collection base identifier
+     * @param int                     $type      aggregate base identifier
      */
     private function readCollection(WkbReader $reader, SpatialBuilder $builder, CoordinateDimensionEnum $dimension, int $type): SpatialInterface
     {
         $count = $reader->readCount(5);
         $expected = match ($type) {
-            4 => GeometryTypeEnum::POINT,
-            5 => GeometryTypeEnum::LINESTRING,
-            6 => GeometryTypeEnum::POLYGON,
-            default => null,
+            4 => [GeometryTypeEnum::POINT],
+            5 => [GeometryTypeEnum::LINESTRING],
+            6 => [GeometryTypeEnum::POLYGON],
+            9 => [GeometryTypeEnum::LINESTRING, GeometryTypeEnum::CIRCULARSTRING],
+            default => [],
         };
         $members = [];
         for ($index = 0; $index < $count; ++$index) {
             $member = $this->readGeometry($reader);
-            if (null !== $expected && $expected !== $member->getType()) {
+            if ([] !== $expected && !\in_array($member->getType(), $expected, true)) {
                 throw new InvalidArgumentException('Incompatible WKB collection member type.');
             }
             if ($dimension !== $member->getDimension()) {
@@ -164,9 +166,10 @@ final class WkbDecoderStrategy extends AbstractConfigurableStrategy implements S
 
         return match ($type % 1000) {
             1 => $this->buildPoint($builder, $dimension, $reader->readCoordinates($dimension)),
-            2 => $this->readLineString($reader, $builder, $dimension),
+            2 => $builder->createLineString($this->readPoints($reader, $builder, $dimension)),
             3 => $this->readPolygon($reader, $builder, $dimension),
-            4, 5, 6, 7 => $this->readCollection($reader, $builder, $dimension, $type % 1000),
+            4, 5, 6, 7, 9 => $this->readCollection($reader, $builder, $dimension, $type % 1000),
+            8 => $builder->createCircularString($this->readPoints($reader, $builder, $dimension)),
             default => throw new InvalidArgumentException('Unsupported WKB type identifier.'),
         };
     }
@@ -177,8 +180,10 @@ final class WkbDecoderStrategy extends AbstractConfigurableStrategy implements S
      * @param WkbReader               $reader    current binary cursor
      * @param SpatialBuilder          $builder   construction context for all components
      * @param CoordinateDimensionEnum $dimension declared coordinate layout
+     *
+     * @return list<PointInterface>
      */
-    private function readLineString(WkbReader $reader, SpatialBuilder $builder, CoordinateDimensionEnum $dimension): LineStringInterface
+    private function readPoints(WkbReader $reader, SpatialBuilder $builder, CoordinateDimensionEnum $dimension): array
     {
         $count = $reader->readCount(8 * $dimension->coordinateDimension());
         $points = [];
@@ -186,7 +191,7 @@ final class WkbDecoderStrategy extends AbstractConfigurableStrategy implements S
             $points[] = $this->buildPoint($builder, $dimension, $reader->readCoordinates($dimension));
         }
 
-        return $builder->createLineString($points);
+        return $points;
     }
 
     /**
@@ -201,7 +206,7 @@ final class WkbDecoderStrategy extends AbstractConfigurableStrategy implements S
         $count = $reader->readCount(4);
         $rings = [];
         for ($index = 0; $index < $count; ++$index) {
-            $rings[] = $this->readLineString($reader, $builder, $dimension);
+            $rings[] = $builder->createLineString($this->readPoints($reader, $builder, $dimension));
         }
 
         return $builder->createPolygon($rings);
