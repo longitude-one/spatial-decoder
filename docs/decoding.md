@@ -1,6 +1,6 @@
 # Decoding spatial data
 
-Turn WKT or EWKT text, or a WKB binary Point, into spatial objects. The default output is immutable Geometry.
+Turn WKT or EWKT text, or WKB binary data, into spatial objects. The default output is immutable Geometry.
 The text formats describe points, lines, polygons and collections using readable coordinates.
 See [the README](../README.md) for installation.
 
@@ -40,9 +40,9 @@ geometry: it applies to every collection member. Use an unsigned integer from
 
 ## WKB decoding
 
-Use `WkbDecoderStrategy` for raw binary Points in XY, XYZ, XYM or XYZM, including EMPTY. Both little-endian
-and big-endian inputs are supported, following OGC Simple Feature Access 1.2.1,
-section 8 (numeric encoding in 8.2.2–8.2.5 and Point structure in 8.2.8).
+Use `WkbDecoderStrategy` for raw binary Points, LineStrings and Polygons in XY, XYZ,
+XYM or XYZM, including EMPTY. Both little-endian and big-endian inputs are supported.
+The binary structures follow ISO/IEC CD 13249-3:201x(E), clause 5.1.58.
 
 ```php
 use LongitudeOne\SpatialDecoder\Decoder;
@@ -63,19 +63,19 @@ options have the same defaults and accepted values as the text strategies.
 
 The type identifier determines the layout; coordinate count never changes it:
 
-| Layout | Type identifier | Ordinates |
-| --- | ---: | --- |
-| XY | 1 | X, Y |
-| XYZ | 1001 | X, Y, Z |
-| XYM | 2001 | X, Y, M |
-| XYZM | 3001 | X, Y, Z, M |
+| Layout | Point | LineString | Polygon | Ordinates |
+| --- | ---: | ---: | ---: | --- |
+| XY | 1 | 2 | 3 | X, Y |
+| XYZ | 1001 | 1002 | 1003 | X, Y, Z |
+| XYM | 2001 | 2002 | 2003 | X, Y, M |
+| XYZM | 3001 | 3002 | 3003 | X, Y, Z, M |
 
 The dimensional identifiers and ordinate order follow ISO/IEC CD 13249-3:201x(E),
 clause 5.1.58, Table 15 and rules bv–cc. This local source is a Committee Draft,
 not a final published edition. These dimensional layouts extend the XY scope
 of the Epic's OGC reference. M remains a measure, distinct from Z.
 
-EMPTY follows the existing LongitudeOne WKB encoder convention: every ordinate
+For Points, EMPTY follows the existing LongitudeOne WKB encoder convention: every ordinate
 is an IEEE-754 quiet NaN (`7ff8000000000000` in big-endian order,
 `000000000000f87f` in little-endian order). This interoperability convention is
 not claimed as an OGC SFA 1.2.1 requirement. All-NaN inputs produce an EMPTY
@@ -83,9 +83,32 @@ Point with the dimension declared by the type identifier; mixed NaN and
 non-NaN ordinates are rejected. Output family and mutability apply equally to
 EMPTY Points, whose `toArray()` is `[]`.
 
+LineStrings preserve their point sequence. Polygons preserve the exterior ring
+first, followed by interior rings in their original order. Rings contain a point
+count and coordinates, without a separate geometry header. A zero point count
+represents LineString EMPTY; a zero ring count represents Polygon EMPTY. Their
+declared type and dimension are preserved, as are EMPTY components. These forms
+match the existing LongitudeOne WKB encoder.
+
+```php
+$line = $decoder->decode(hex2bin(
+    '010200000002000000'
+    . '000000000000f03f00000000000000c0'
+    . '00000000000010400000000000001440'
+));
+
+// $line->toArray() === [[1.0, -2.0], [4.0, 5.0]]
+```
+
+The `mode` and `mutable` options apply to the entire graph, including rings and
+vertices. Decoding does not close or reorient rings, check intersections or
+relationships between rings, or repair geometrically invalid structures.
+Constructible invalid geometries remain accepted, consistently with WKT.
+
 Other geometry types, unsupported dimensional identifiers, hexadecimal text,
 EWKB and MySQL binary wrappers are rejected. Empty input,
-invalid byte-order markers, truncation and trailing bytes are also rejected.
+invalid byte-order markers, truncation, impossible element counts and trailing bytes
+are also rejected. A declared count cannot exceed what the remaining bytes can hold.
 These rejections raise the library's `InvalidArgumentException`. The strategy
 can be reused after a successful or failed decoding call.
 
@@ -113,7 +136,7 @@ rejected. Unmarked EMPTY uses its inherited dimension, or XY by default.
 
 ## Supported geometries
 
-Both strategies decode Point, LineString, Polygon, MultiPoint, MultiLineString,
+Both text strategies decode Point, LineString, Polygon, MultiPoint, MultiLineString,
 MultiPolygon, GeometryCollection, CircularString and CompoundCurve.
 Collections may be nested.
 
@@ -129,7 +152,7 @@ Standard WKT does not decode these two types.
 
 ## Decoding and geometric validation
 
-Successful decoding means the text could be read, not that its geometry is valid.
+Successful decoding means the representation could be read and constructed, not that its geometry is valid.
 An unclosed polygon ring, too few line points or disconnected curve parts can still
 produce an object. The decoder preserves them without repair.
 

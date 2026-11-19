@@ -127,7 +127,7 @@ final class WkbPointDimensionTest extends TestCase
     /** Unsupported type families must fail in both byte orders at plausible lengths. */
     public function testUnsupportedTypes(): void
     {
-        foreach ([1000, 1002, 2000, 2002, 3000, 3002, 4001, 0x80000001, 0x40000001, 0xC0000001, 0x20000001, 0xA0000001, 0xE0000001] as $type) {
+        foreach ([1000, 1004, 2000, 2004, 3000, 3004, 4001, 0x80000001, 0x40000001, 0xC0000001, 0x20000001, 0xA0000001, 0xE0000001] as $type) {
             foreach (['V', 'N'] as $format) {
                 foreach ([2, 3, 4] as $count) {
                     $input = ('V' === $format ? "\1" : "\0").pack($format, $type).str_repeat("\0", 8 * $count);
@@ -135,7 +135,7 @@ final class WkbPointDimensionTest extends TestCase
                         new WkbDecoderStrategy()->decode($input);
                         self::fail('Expected unsupported type rejection.');
                     } catch (InvalidArgumentException $exception) {
-                        self::assertStringContainsString('Unsupported WKB Point type', $exception->getMessage());
+                        self::assertStringContainsString('Unsupported WKB type', $exception->getMessage());
                     }
                 }
             }
