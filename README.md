@@ -34,13 +34,13 @@ $point = $decoder->decode('POINT (1 2)');
 
 Read the [official documentation](https://www.longitude-one.fr/spatial-decoder/v1/index.html).
 
-See the [decoding guide](docs/decoding.md) for EWKT, WKB Points, curves, dimensions and unsupported types.
+See the [decoding guide](docs/decoding.md) for EWKT, WKB geometries, curves, dimensions and unsupported types.
 
 ## Input formats
 
-Built-in strategies decode WKT and EWKT, plus XY, XYZ, XYM and XYZM Points in raw WKB
-(both byte orders), including EMPTY Points. Other WKB geometry types are not
-yet supported. EWKB and MySQL internal binary are not supported.
+Built-in strategies decode WKT and EWKT, plus XY, XYZ, XYM and XYZM Points, LineStrings
+and Polygons in raw WKB (both byte orders), including EMPTY geometries. Other WKB
+geometry types are not yet supported. EWKB and MySQL internal binary are not supported.
 
 ## Decoding and geometric validation
 
