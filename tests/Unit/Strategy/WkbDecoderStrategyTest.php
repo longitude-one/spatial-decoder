@@ -40,13 +40,10 @@ final class WkbDecoderStrategyTest extends TestCase
         foreach (range(0, 20) as $length) {
             yield 'truncated '.$length => [substr($valid, 0, $length)];
         }
-        foreach ([0, 2, 3, 4, 5, 6, 7, 8, 9, 15, 16, 17, 999, 1001, 2001, 3001, 0x80000001, 0x40000001, 0x20000001] as $type) {
+        foreach ([0, 2, 3, 4, 5, 6, 7, 8, 9, 15, 16, 17, 999, 1000, 1002, 2000, 2002, 3000, 3002, 4001, 0x80000001, 0x40000001, 0x20000001] as $type) {
             yield 'unsupported type '.$type => ["\1".pack('V', $type).substr($valid, 5)];
         }
-        yield 'XYZ point' => ["\1".pack('V', 1001).pack('e*', 1, 2, 3)];
         yield 'EWKB SRID' => ["\1".pack('V2', 0x20000001, 4326).pack('e*', 1, 2)];
-        yield 'empty little endian' => [pack('H*', '0101000000000000000000f87f000000000000f87f')];
-        yield 'empty big endian' => [pack('H*', '00000000017ff80000000000007ff8000000000000')];
         yield 'NaN X' => ["\1".pack('V', 1).pack('e*', \NAN, 2)];
         yield 'NaN Y' => ["\1".pack('V', 1).pack('e*', 1, \NAN)];
     }
