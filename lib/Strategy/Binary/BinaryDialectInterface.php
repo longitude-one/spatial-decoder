@@ -13,24 +13,15 @@ declare(strict_types=1);
 
 namespace LongitudeOne\SpatialDecoder\Strategy\Binary;
 
-use LongitudeOne\Core\Enum\CoordinateDimensionEnum;
 use LongitudeOne\SpatialDecoder\Strategy\Wkb\WkbReader;
 
 /**
- * Isolate header interpretation and ordinate/EMPTY policy from geometry bodies.
+ * Isolate representation-specific header interpretation from geometry bodies.
  *
  * @internal
  */
 interface BinaryDialectInterface
 {
-    /**
-     * @param WkbReader               $reader    current bounded byte cursor
-     * @param CoordinateDimensionEnum $dimension declared coordinate layout
-     *
-     * @return list<float>
-     */
-    public function readCoordinates(WkbReader $reader, CoordinateDimensionEnum $dimension): array;
-
     /**
      * Interpret every root/member header using the selected representation.
      *

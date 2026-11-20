@@ -153,7 +153,7 @@ final class BinaryGeometryDecoder
         $builder = $this->createBuilder($dimension);
 
         return match ($geometryType) {
-            GeometryTypeEnum::POINT => $this->buildPoint($builder, $dimension, $this->dialect->readCoordinates($reader, $dimension)),
+            GeometryTypeEnum::POINT => $this->buildPoint($builder, $dimension, $reader->readCoordinates($dimension)),
             GeometryTypeEnum::LINESTRING => $builder->createLineString($this->readPoints($reader, $builder, $dimension)),
             GeometryTypeEnum::POLYGON,
             GeometryTypeEnum::TRIANGLE => $this->readPolygon($reader, $builder, $dimension, $geometryType),
@@ -182,7 +182,7 @@ final class BinaryGeometryDecoder
         $count = $reader->readCount(8 * $dimension->coordinateDimension());
         $points = [];
         for ($index = 0; $index < $count; ++$index) {
-            $points[] = $this->buildPoint($builder, $dimension, $this->dialect->readCoordinates($reader, $dimension));
+            $points[] = $this->buildPoint($builder, $dimension, $reader->readCoordinates($dimension));
         }
 
         return $points;

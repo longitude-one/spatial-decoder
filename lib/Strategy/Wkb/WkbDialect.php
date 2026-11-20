@@ -20,23 +20,12 @@ use LongitudeOne\SpatialDecoder\Strategy\Binary\BinaryDialectInterface;
 use LongitudeOne\SpatialDecoder\Strategy\Binary\BinaryGeometryHeader;
 
 /**
- * Standard WKB identifiers and existing LongitudeOne Point EMPTY policy.
+ * Standard WKB geometry identifiers and dimensional offsets.
  *
  * @internal
  */
 final class WkbDialect implements BinaryDialectInterface
 {
-    /**
-     * @param WkbReader               $reader    current bounded byte cursor
-     * @param CoordinateDimensionEnum $dimension declared coordinate layout
-     *
-     * @return list<float>
-     */
-    public function readCoordinates(WkbReader $reader, CoordinateDimensionEnum $dimension): array
-    {
-        return $reader->readCoordinates($dimension);
-    }
-
     /**
      * Resolve SQL/MM offsets without accepting EWKB flag bits at any depth.
      *

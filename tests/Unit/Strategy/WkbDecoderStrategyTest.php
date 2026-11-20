@@ -61,6 +61,11 @@ final class WkbDecoderStrategyTest extends TestCase
             }
         }
         yield 'EWKB SRID' => ["\1".pack('V2', 0x20000001, 4326).pack('e*', 1, 2)];
+        foreach (['V' => ['e*', "\1"], 'N' => ['E*', "\0"]] as $integer => [$double, $marker]) {
+            $point = $marker.pack($integer, 1001).pack($double, \NAN, \NAN, 12);
+            yield 'XYZ NaN NaN 12 root '.$integer => [$point];
+            yield 'XYZ NaN NaN 12 member '.$integer => [$marker.pack($integer.'2', 1007, 1).$point];
+        }
         yield 'NaN X' => ["\1".pack('V', 1).pack('e*', \NAN, 2)];
         yield 'NaN Y' => ["\1".pack('V', 1).pack('e*', 1, \NAN)];
     }
