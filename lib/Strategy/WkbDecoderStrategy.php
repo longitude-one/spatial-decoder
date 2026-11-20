@@ -55,19 +55,19 @@ final class WkbDecoderStrategy extends AbstractConfigurableStrategy implements S
     /**
      * Keep the declared collection or compound-curve type after reading its members.
      *
-     * @param SpatialBuilder $builder construction context
-     * @param int            $type    aggregate base identifier
-     * @param array          $members ordered decoded members
+     * @param SpatialBuilder   $builder construction context
+     * @param GeometryTypeEnum $type    aggregate geometry type
+     * @param array            $members ordered decoded members
      *
      * @phpstan-param list<SpatialInterface> $members
      */
-    private function buildCollection(SpatialBuilder $builder, int $type, array $members): SpatialInterface
+    private function buildCollection(SpatialBuilder $builder, GeometryTypeEnum $type, array $members): SpatialInterface
     {
         return match ($type) {
-            4 => $builder->createMultiPoint($members),
-            5 => $builder->createMultiLineString($members),
-            6 => $builder->createMultiPolygon($members),
-            9 => $builder->createCompoundCurve($members),
+            GeometryTypeEnum::MULTIPOINT => $builder->createMultiPoint($members),
+            GeometryTypeEnum::MULTILINESTRING => $builder->createMultiLineString($members),
+            GeometryTypeEnum::MULTIPOLYGON => $builder->createMultiPolygon($members),
+            GeometryTypeEnum::COMPOUNDCURVE => $builder->createCompoundCurve($members),
             default => $builder->createCollection($members),
         };
     }
@@ -110,18 +110,15 @@ final class WkbDecoderStrategy extends AbstractConfigurableStrategy implements S
      * @param WkbReader               $reader    current binary cursor
      * @param SpatialBuilder          $builder   parent construction context
      * @param CoordinateDimensionEnum $dimension declared parent layout
-     * @param int                     $type      aggregate base identifier
+     * @param GeometryTypeEnum        $type      aggregate geometry type
      */
-    private function readCollection(WkbReader $reader, SpatialBuilder $builder, CoordinateDimensionEnum $dimension, int $type): SpatialInterface
+    private function readCollection(WkbReader $reader, SpatialBuilder $builder, CoordinateDimensionEnum $dimension, GeometryTypeEnum $type): SpatialInterface
     {
         $count = $reader->readCount(5);
-        $expected = match ($type) {
-            4 => [GeometryTypeEnum::POINT],
-            5 => [GeometryTypeEnum::LINESTRING],
-            6 => [GeometryTypeEnum::POLYGON],
-            9 => [GeometryTypeEnum::LINESTRING, GeometryTypeEnum::CIRCULARSTRING],
-            default => [],
-        };
+        $component = $type->componentType();
+        $expected = GeometryTypeEnum::COMPOUNDCURVE === $type
+            ? [GeometryTypeEnum::LINESTRING, GeometryTypeEnum::CIRCULARSTRING]
+            : (null === $component ? [] : [$component]);
         $members = [];
         for ($index = 0; $index < $count; ++$index) {
             $member = $this->readGeometry($reader);
@@ -144,13 +141,8 @@ final class WkbDecoderStrategy extends AbstractConfigurableStrategy implements S
      */
     private function readDimension(int $type): CoordinateDimensionEnum
     {
-        return match (intdiv($type, 1000)) {
-            0 => CoordinateDimensionEnum::XY,
-            1 => CoordinateDimensionEnum::XYZ,
-            2 => CoordinateDimensionEnum::XYM,
-            3 => CoordinateDimensionEnum::XYZM,
-            default => throw new InvalidArgumentException('Unsupported WKB type identifier.'),
-        };
+        return CoordinateDimensionEnum::tryFromWkbCode($type - $type % 1000)
+            ?? throw new InvalidArgumentException('Unsupported WKB type identifier.');
     }
 
     /**
@@ -162,14 +154,19 @@ final class WkbDecoderStrategy extends AbstractConfigurableStrategy implements S
     {
         $type = $reader->readHeader();
         $dimension = $this->readDimension($type);
+        $geometryType = GeometryTypeEnum::tryFromWkbCode($type % 1000);
         $builder = $this->createBuilder($dimension);
 
-        return match ($type % 1000) {
-            1 => $this->buildPoint($builder, $dimension, $reader->readCoordinates($dimension)),
-            2 => $builder->createLineString($this->readPoints($reader, $builder, $dimension)),
-            3 => $this->readPolygon($reader, $builder, $dimension),
-            4, 5, 6, 7, 9 => $this->readCollection($reader, $builder, $dimension, $type % 1000),
-            8 => $builder->createCircularString($this->readPoints($reader, $builder, $dimension)),
+        return match ($geometryType) {
+            GeometryTypeEnum::POINT => $this->buildPoint($builder, $dimension, $reader->readCoordinates($dimension)),
+            GeometryTypeEnum::LINESTRING => $builder->createLineString($this->readPoints($reader, $builder, $dimension)),
+            GeometryTypeEnum::POLYGON => $this->readPolygon($reader, $builder, $dimension),
+            GeometryTypeEnum::MULTIPOINT,
+            GeometryTypeEnum::MULTILINESTRING,
+            GeometryTypeEnum::MULTIPOLYGON,
+            GeometryTypeEnum::GEOMETRYCOLLECTION,
+            GeometryTypeEnum::COMPOUNDCURVE => $this->readCollection($reader, $builder, $dimension, $geometryType),
+            GeometryTypeEnum::CIRCULARSTRING => $builder->createCircularString($this->readPoints($reader, $builder, $dimension)),
             default => throw new InvalidArgumentException('Unsupported WKB type identifier.'),
         };
     }

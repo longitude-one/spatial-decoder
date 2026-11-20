@@ -45,6 +45,10 @@ MultiLineString, MultiPolygon, CircularString, CompoundCurve and nested Geometry
 including EMPTY. Both little-endian and big-endian inputs are supported.
 The binary structures follow ISO/IEC CD 13249-3:201x(E), clause 5.1.58.
 
+The decoder requires `longitude-one/spatial-core` `^1.4.0` for shared WKB
+correspondences. A type recognized by core is decoded only when listed above;
+other types remain unsupported.
+
 ```php
 use LongitudeOne\SpatialDecoder\Decoder;
 use LongitudeOne\SpatialDecoder\Strategy\WkbDecoderStrategy;

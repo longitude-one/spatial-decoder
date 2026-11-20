@@ -43,6 +43,16 @@ final class WkbDecoderStrategyTest extends TestCase
         foreach ([0, 10, 11, 15, 16, 17, 999, 1000, 1010, 2000, 2010, 3000, 3010, 4001, 0x80000001, 0x40000001, 0x20000001] as $type) {
             yield 'unsupported type '.$type => ["\1".pack('V', $type).substr($valid, 5)];
         }
+        // Core recognizes these base codes, but that must not enable decoding them.
+        foreach ([10, 11, 12, 15, 16, 17] as $base) {
+            foreach ([0, 1000, 2000, 3000] as $offset) {
+                foreach (['V' => "\1", 'N' => "\0"] as $order => $marker) {
+                    $unsupported = $marker.pack($order, $base + $offset).pack($order, 0);
+                    yield 'core-only '.$base.' '.$offset.' '.$order => [$unsupported];
+                    yield 'nested core-only '.$base.' '.$offset.' '.$order => ["\1".pack('V2', 7 + $offset, 1).$unsupported];
+                }
+            }
+        }
         yield 'EWKB SRID' => ["\1".pack('V2', 0x20000001, 4326).pack('e*', 1, 2)];
         yield 'NaN X' => ["\1".pack('V', 1).pack('e*', \NAN, 2)];
         yield 'NaN Y' => ["\1".pack('V', 1).pack('e*', 1, \NAN)];
