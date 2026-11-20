@@ -41,9 +41,11 @@ geometry: it applies to every collection member. Use an unsigned integer from
 ## WKB decoding
 
 Use `WkbDecoderStrategy` for raw binary Point, LineString, Polygon, MultiPoint,
-MultiLineString, MultiPolygon, CircularString, CompoundCurve and nested GeometryCollection in XY, XYZ, XYM or XYZM,
-including EMPTY. Both little-endian and big-endian inputs are supported.
-The binary structures follow ISO/IEC CD 13249-3:201x(E), clause 5.1.58.
+MultiLineString, MultiPolygon, CircularString, CompoundCurve, Triangle and nested GeometryCollection in XY, XYZ, XYM or XYZM,
+including EMPTY. PolyhedralSurface supports XYZ and XYZM only, including EMPTY.
+Both little-endian and big-endian inputs are supported. The binary structures use
+ISO/IEC CD 13249-3:201x(E), clause 5.1.58, with the encoder-compatible surface
+representations described below.
 
 The decoder requires `longitude-one/spatial-core` `^1.4.0` for shared WKB
 correspondences. A type recognized by core is decoded only when listed above;
@@ -194,13 +196,53 @@ repair control points or add geometric validity checks. Constructible short or
 even-length circular sequences remain unchanged; use spatial-validator when
 geometric validity is required.
 
+### WKB surfaces
+
+Triangle retains its type, ordered rings and coordinates. PolyhedralSurface
+retains its ordered Polygon patches and their rings. Both types can appear at
+the root or inside GeometryCollection; neither is converted to Polygon or MultiPolygon.
+
+| Surface | XY | XYZ | XYM | XYZM |
+| --- | ---: | ---: | ---: | ---: |
+| Triangle | 17 | 1017 | 2017 | 3017 |
+| PolyhedralSurface | Unsupported | 1015 | Unsupported | 3015 |
+
+These identifiers extend the Epic's OGC SFA 1.2.1 baseline and appear in
+ISO/IEC CD 13249-3:201x(E), clause 5.1.58, Table 15. However, that Committee
+Draft's editor's note 4-406 leaves the WKB productions for Triangle and
+PolyhedralSurface unspecified. The structures below follow the existing
+LongitudeOne WKB encoder contract; they are not claimed as complete grammar
+requirements from that draft.
+
+Triangle uses a ring count followed by the same ring encoding as Polygon,
+without nested ring headers. PolyhedralSurface uses a patch count followed by
+complete Polygon WKB values. Each patch has its own byte-order marker and must
+declare exactly the surface's dimension. Other patch types are rejected,
+including Triangle. XYZ and XYZM are the layouts available in the spatial model;
+XY and XYM PolyhedralSurface inputs are rejected even when EMPTY.
+
+```php
+$surface = $decoder->decode(hex2bin(
+    '01f703000001000000' // Little-endian PolyhedralSurface Z, one patch.
+    . '00000003eb00000000' // Big-endian Polygon Z EMPTY.
+));
+
+// $surface->toArray() === [[]]
+```
+
+A zero ring count produces Triangle EMPTY; a zero patch count produces
+PolyhedralSurface EMPTY. Their declared type and dimension are retained.
+EMPTY patches, rings and vertices keep their positions. The `mode` and `mutable`
+options apply to every patch, ring and vertex, consistently with EWKT construction.
+Decoding adds no triangle validity, patch topology or surface closure checks.
+
 ### Rejected WKB input
 
 Other geometry types, unsupported dimensional identifiers, hexadecimal text,
 EWKB and MySQL binary wrappers are rejected. Empty input,
 invalid byte-order markers, truncation, impossible element counts and trailing bytes
 are also rejected, including inside nested collections. Incompatible collection
-member types or dimensions, including CompoundCurve components, are rejected.
+member types or dimensions, including CompoundCurve components and PolyhedralSurface patches, are rejected.
 A declared count cannot exceed what the remaining bytes can hold.
 These rejections raise the library's `InvalidArgumentException`. The strategy
 can be reused after a successful or failed decoding call.

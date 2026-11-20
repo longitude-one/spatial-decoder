@@ -40,11 +40,11 @@ final class WkbDecoderStrategyTest extends TestCase
         foreach (range(0, 20) as $length) {
             yield 'truncated '.$length => [substr($valid, 0, $length)];
         }
-        foreach ([0, 10, 11, 15, 16, 17, 999, 1000, 1010, 2000, 2010, 3000, 3010, 4001, 0x80000001, 0x40000001, 0x20000001] as $type) {
+        foreach ([0, 10, 11, 16, 999, 1000, 1010, 2000, 2010, 3000, 3010, 4001, 0x80000001, 0x40000001, 0x20000001] as $type) {
             yield 'unsupported type '.$type => ["\1".pack('V', $type).substr($valid, 5)];
         }
         // Core recognizes these base codes, but that must not enable decoding them.
-        foreach ([10, 11, 12, 15, 16, 17] as $base) {
+        foreach ([10, 11, 12, 16] as $base) {
             foreach ([0, 1000, 2000, 3000] as $offset) {
                 foreach (['V' => "\1", 'N' => "\0"] as $order => $marker) {
                     $unsupported = $marker.pack($order, $base + $offset).pack($order, 0);

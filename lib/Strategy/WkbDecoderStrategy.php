@@ -68,6 +68,7 @@ final class WkbDecoderStrategy extends AbstractConfigurableStrategy implements S
             GeometryTypeEnum::MULTILINESTRING => $builder->createMultiLineString($members),
             GeometryTypeEnum::MULTIPOLYGON => $builder->createMultiPolygon($members),
             GeometryTypeEnum::COMPOUNDCURVE => $builder->createCompoundCurve($members),
+            GeometryTypeEnum::POLYHEDRALSURFACE => $builder->createPolyhedralSurface($members),
             default => $builder->createCollection($members),
         };
     }
@@ -160,7 +161,9 @@ final class WkbDecoderStrategy extends AbstractConfigurableStrategy implements S
         return match ($geometryType) {
             GeometryTypeEnum::POINT => $this->buildPoint($builder, $dimension, $reader->readCoordinates($dimension)),
             GeometryTypeEnum::LINESTRING => $builder->createLineString($this->readPoints($reader, $builder, $dimension)),
-            GeometryTypeEnum::POLYGON => $this->readPolygon($reader, $builder, $dimension),
+            GeometryTypeEnum::POLYGON,
+            GeometryTypeEnum::TRIANGLE => $this->readPolygon($reader, $builder, $dimension, $geometryType),
+            GeometryTypeEnum::POLYHEDRALSURFACE => $this->readPolyhedralSurface($reader, $builder, $dimension),
             GeometryTypeEnum::MULTIPOINT,
             GeometryTypeEnum::MULTILINESTRING,
             GeometryTypeEnum::MULTIPOLYGON,
@@ -192,13 +195,14 @@ final class WkbDecoderStrategy extends AbstractConfigurableStrategy implements S
     }
 
     /**
-     * Rings contain counters and coordinates, without nested geometry headers.
+     * Polygon and Triangle rings have no nested geometry headers.
      *
      * @param WkbReader               $reader    current binary cursor
      * @param SpatialBuilder          $builder   construction context for all components
      * @param CoordinateDimensionEnum $dimension declared coordinate layout
+     * @param GeometryTypeEnum        $type      declared Polygon or Triangle type
      */
-    private function readPolygon(WkbReader $reader, SpatialBuilder $builder, CoordinateDimensionEnum $dimension): SpatialInterface
+    private function readPolygon(WkbReader $reader, SpatialBuilder $builder, CoordinateDimensionEnum $dimension, GeometryTypeEnum $type): SpatialInterface
     {
         $count = $reader->readCount(4);
         $rings = [];
@@ -206,6 +210,22 @@ final class WkbDecoderStrategy extends AbstractConfigurableStrategy implements S
             $rings[] = $builder->createLineString($this->readPoints($reader, $builder, $dimension));
         }
 
-        return $builder->createPolygon($rings);
+        return GeometryTypeEnum::TRIANGLE === $type ? $builder->createTriangle($rings) : $builder->createPolygon($rings);
+    }
+
+    /**
+     * Reject layouts unavailable in the spatial model, even for EMPTY surfaces.
+     *
+     * @param WkbReader               $reader    current binary cursor
+     * @param SpatialBuilder          $builder   construction context for all patches
+     * @param CoordinateDimensionEnum $dimension declared coordinate layout
+     */
+    private function readPolyhedralSurface(WkbReader $reader, SpatialBuilder $builder, CoordinateDimensionEnum $dimension): SpatialInterface
+    {
+        if (!$dimension->hasZ()) {
+            throw new InvalidArgumentException('WKB PolyhedralSurface requires an XYZ or XYZM coordinate dimension.');
+        }
+
+        return $this->readCollection($reader, $builder, $dimension, GeometryTypeEnum::POLYHEDRALSURFACE);
     }
 }
