@@ -1,7 +1,7 @@
 # EWKB decoding compatibility contract — v1
 
-**Status: six Technical Architect decisions recorded on 2026-11-20; final
-contract review pending.** This document addresses
+**Status: six Technical Architect decisions recorded on 2026-11-20; decision 5
+amended after the PR #87 review to align NaN handling with WKB.** This document addresses
 [Story #78](https://github.com/longitude-one/spatial-decoder/issues/78).
 It records the decisions listed in the approval record below, without introducing
 an EWKB decoder or claiming blanket approval of every retained baseline rule.
@@ -108,7 +108,7 @@ when building it; do not apply a later recursive `withSrid()` or propagating
 | Other types | Reject CurvePolygon, MultiCurve, MultiSurface, TIN, abstract types and legacy aliases | Approved decision 6; existing WKB subset, narrower than PostGIS |
 | Collection layout | Every member must declare exactly its parent's layout, recursively, including EMPTY | Existing LongitudeOne |
 | Member types | Preserve existing Multi*, CompoundCurve and PolyhedralSurface member restrictions | Existing LongitudeOne |
-| Point NaN ordinates | Preserve every ordinate, including mixed or all-NaN sequences; never convert NaN to EMPTY | Approved decision 5; differs from WKB and PostGIS |
+| Point NaN ordinates | Reject mixed NaN/non-NaN sequences; convert all-NaN sequences to EMPTY, preserving the declared layout | Amended decision 5; common WKB/EWKB policy |
 | Other EMPTY values | Zero point/ring/member/patch count according to the existing WKB body | Existing LongitudeOne |
 | Count-based EMPTY members | Preserve type, dimension, effective SRID, order and position | Existing LongitudeOne plus approved SRID policy |
 | Input representation | One geometry in raw bytes only | Existing LongitudeOne strategy boundary |
@@ -118,13 +118,13 @@ when building it; do not apply a later recursive `withSrid()` or propagating
 | Output | Existing Geometry/Geography and mutable/immutable options apply throughout the graph | Existing LongitudeOne |
 | Validation | Preserve constructible coordinates and structure; no topology checks or repair | Existing LongitudeOne |
 
-NaN payload bytes need not survive construction as PHP floats; the decision
-preserves NaN ordinate values and their positions, not IEEE-754 payload bits.
-A Point `(NaN, NaN, 12)` remains XYZ with those three values, as does
-`(NaN, NaN, NaN)`. Neither is automatically EMPTY. V1 defines no special
-NaN-based Point EMPTY representation. Count-based EMPTY geometries remain
-available. Existing WKB all-NaN-to-EMPTY conversion and mixed-NaN rejection
-remain unchanged; EWKB must not silently reuse that conversion.
+WKB and EWKB use the same ordinate/EMPTY policy for every coordinate sequence,
+including nested members and vertices. A Point `(NaN, NaN, 12)` is rejected;
+`(NaN, NaN, NaN)` becomes an XYZ EMPTY Point. All declared ordinates must be
+NaN for this conversion, including M in XYZM. Count-based EMPTY geometries
+remain available. No NaN payload or partial coordinate preservation is promised.
+This is an explicit LongitudeOne compatibility decision, not a claim that
+PostGIS behavior establishes standard WKB requirements.
 
 This decision does not add a public strategy class or approve its future API.
 Reuse existing spatial-core enums and spatial-types contracts. No new domain
@@ -150,9 +150,9 @@ Current `WkbDecoderStrategy` continues to reject EWKB flags.
 | Offset 1000 plus matching Z | `01 e9030080 000000000000f03f 0000000000000040 0000000000000840` | Accept redundant XYZ |
 | Offset 2000 plus Z | `01 d1070080 000000000000f03f 0000000000000040 0000000000000840 0000000000001040` | Accept XYZM, four ordinates |
 | Unknown high bit | `01 01000010 000000000000f03f 0000000000000040` | Reject unsupported bit |
-| XY all-NaN, SRID 4326 | `01 01000020 e6100000 000000000000f87f 000000000000f87f` | Preserve two NaN ordinates |
-| XYZ mixed NaN | `01 01000080 000000000000f87f 000000000000f87f 0000000000002840` | Preserve `(NaN, NaN, 12)` |
-| XYZ all-NaN | `01 01000080 000000000000f87f 000000000000f87f 000000000000f87f` | Preserve three NaN ordinates |
+| XY all-NaN, SRID 4326 | `01 01000020 e6100000 000000000000f87f 000000000000f87f` | Accept XY EMPTY Point, SRID 4326 |
+| XYZ mixed NaN | `01 01000080 000000000000f87f 000000000000f87f 0000000000002840` | Reject mixed NaN/non-NaN ordinates |
+| XYZ all-NaN | `01 01000080 000000000000f87f 000000000000f87f 000000000000f87f` | Accept XYZ EMPTY Point |
 | Missing flagged SRID | `01 01000020` | Reject truncation |
 
 Nested examples use a little-endian GeometryCollection with SRID 4326 and one
@@ -190,12 +190,16 @@ on **2026-11-20**:
    inherit the immediate parent only when the field is absent. No sibling leakage,
    SRID consistency validation, normalization or implicit validator call.
 4. Reject unrecognized bits and types; do not mask `0x10000000`.
-5. Preserve mixed and all-NaN ordinate sequences without automatic EMPTY
-   conversion or rejection based on their mixture.
+5. **Amended after the PR #87 review:** reject mixed NaN/non-NaN sequences and
+   convert all-NaN sequences to EMPTY exactly as WKB does. Alexandre explicitly
+   requested homogeneous WKB/EWKB behavior, superseding the original decision
+   to preserve mixed and all-NaN sequences.
 6. Retain the existing supported geometry families; reject CurvePolygon,
    MultiCurve, MultiSurface and TIN. Future support will be separate Stories
    after decoder v1; this change does not create them.
 
-The remaining baseline rows are documented for final contract review, without
-claiming additional approvals that were not discussed. No merge, Story Done
-status or dependent EWKB implementation is authorized by this document.
+The initial contract received independent review in
+[PR #86](https://github.com/longitude-one/spatial-decoder/pull/86) before merge.
+The NaN amendment above records Alexandre's subsequent explicit compatibility
+decision for PR #87; all other decisions remain unchanged. This document does
+not itself merge implementation PRs or declare dependent Stories Done.

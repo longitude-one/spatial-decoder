@@ -323,3 +323,17 @@ Library decoding exceptions implement
 The last two exceptions expose the recognized type through `getSpatialType()`.
 They can be raised before the rest of the text is checked, including inside
 collections; neither confirms that the full input is syntactically valid.
+
+### Internal binary decoding
+
+`WkbDecoderStrategy` delegates geometry bodies, recursive member decoding and
+spatial construction to the internal `BinaryGeometryDecoder`. `WkbDialect`
+interprets every root and member header. The shared reader rejects mixed NaN
+sequences and maps all-NaN sequences to EMPTY, the approved common WKB/EWKB
+policy. Each decode creates a fresh bounded `WkbReader`;
+failed calls do not leave cursor or construction state in the strategy.
+
+These implementation classes are internal, not supported public extension
+points. This extraction prepares reuse by a future EWKB strategy; it does not
+enable EWKB flags or SRIDs in WKB. The public constructor,
+output options, accepted geometry families and rejection behavior are unchanged.

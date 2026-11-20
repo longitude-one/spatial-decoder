@@ -53,7 +53,19 @@ final class WkbDecoderStrategyTest extends TestCase
                 }
             }
         }
+        foreach ([0x80000001, 0x40000001, 0x20000001, 0x10000001, 0xE0000001] as $flaggedType) {
+            foreach (['V' => "\1", 'N' => "\0"] as $order => $marker) {
+                $member = $marker.pack($order, $flaggedType).pack('e*', 1, 2, 3, 4);
+                yield 'nested extension '.$flaggedType.' '.$order => ["\1".pack('V2', 7, 1).$member];
+                yield 'deep extension '.$flaggedType.' '.$order => ["\0".pack('N2', 7, 1)."\1".pack('V2', 7, 1).$member];
+            }
+        }
         yield 'EWKB SRID' => ["\1".pack('V2', 0x20000001, 4326).pack('e*', 1, 2)];
+        foreach (['V' => ['e*', "\1"], 'N' => ['E*', "\0"]] as $integer => [$double, $marker]) {
+            $point = $marker.pack($integer, 1001).pack($double, \NAN, \NAN, 12);
+            yield 'XYZ NaN NaN 12 root '.$integer => [$point];
+            yield 'XYZ NaN NaN 12 member '.$integer => [$marker.pack($integer.'2', 1007, 1).$point];
+        }
         yield 'NaN X' => ["\1".pack('V', 1).pack('e*', \NAN, 2)];
         yield 'NaN Y' => ["\1".pack('V', 1).pack('e*', 1, \NAN)];
     }
