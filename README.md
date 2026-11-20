@@ -18,6 +18,9 @@ when your application requires geometric validity.
 composer require longitude-one/spatial-decoder:^1.0.0-RC.0
 ```
 
+Requires PHP 8.4 or later and `longitude-one/spatial-core` `^1.4.0`.
+Composer installs the compatible dependencies automatically.
+
 ## Usage
 
 ```php
