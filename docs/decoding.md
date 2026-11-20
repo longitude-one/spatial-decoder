@@ -238,14 +238,28 @@ Decoding adds no triangle validity, patch topology or surface closure checks.
 
 ### Rejected WKB input
 
-Other geometry types, unsupported dimensional identifiers, hexadecimal text,
-EWKB and MySQL binary wrappers are rejected. Empty input,
-invalid byte-order markers, truncation, impossible element counts and trailing bytes
-are also rejected, including inside nested collections. Incompatible collection
-member types or dimensions, including CompoundCurve components and PolyhedralSurface patches, are rejected.
-A declared count cannot exceed what the remaining bytes can hold.
-These rejections raise the library's `InvalidArgumentException`. The strategy
-can be reused after a successful or failed decoding call.
+WKB failures raise `LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException`,
+which implements `DecoderExceptionInterface`. The message identifies the cause;
+applications should catch the exception type rather than match its exact text.
+This applies at the root and inside nested members.
+
+| Error category | Rejected input |
+| --- | --- |
+| Header | Empty input, incomplete headers or byte-order markers other than `0` and `1` |
+| Representation or identifier | Unknown or unsupported types and dimensions, EWKB flags, hexadecimal text or MySQL binary wrappers |
+| Truncation | Incomplete counters, ordinates, rings, curve components, patches or nested geometries |
+| Impossible count | A declared count exceeding what the available bytes can hold, including very large counters in short inputs |
+| Member contract | Incompatible member types or dimensions, including EMPTY components and patches |
+| Coordinate contract | Mixed NaN and non-NaN Point ordinates, or PolyhedralSurface without Z |
+| Extra data | Any bytes remaining after the single root geometry |
+
+Impossible counters are rejected before allocating or constructing the declared
+number of elements. A failure returns no partially decoded object and does not
+alter an object returned by an earlier call. The same strategy instance remains
+usable after every rejection.
+
+These checks do not validate geometric topology. Constructible short lines,
+unclosed rings and disconnected curve components remain accepted without repair.
 
 ## Choose WKT or EWKT
 
