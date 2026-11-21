@@ -21,7 +21,7 @@ use LongitudeOne\SpatialDecoder\Strategy\Binary\BinaryGeometryHeader;
 use LongitudeOne\SpatialDecoder\Strategy\Wkb\WkbReader;
 
 /**
- * Initial XY EWKB header support; nested SRID metadata is not yet supported.
+ * EWKB dimensional headers; explicit nested SRID metadata is not yet supported.
  *
  * @internal
  */
@@ -40,15 +40,25 @@ final class EwkbDialect implements BinaryDialectInterface
     {
         $word = $reader->readHeader();
         $hasSrid = 0 !== ($word & 0x20000000);
-        $type = $word & ~0x20000000;
-        $geometryType = GeometryTypeEnum::tryFromWkbCode($type)
-            ?? throw new InvalidArgumentException('Unsupported EWKB XY type identifier.');
+        $type = $word & ~0xE0000000;
+        $offset = CoordinateDimensionEnum::tryFromWkbCode($type - $type % 1000)
+            ?? throw new InvalidArgumentException('Unsupported EWKB type identifier.');
+        $geometryType = GeometryTypeEnum::tryFromWkbCode($type % 1000)
+            ?? throw new InvalidArgumentException('Unsupported EWKB type identifier.');
+        $hasZ = $offset->hasZ() || 0 !== ($word & 0x80000000);
+        $hasM = $offset->hasM() || 0 !== ($word & 0x40000000);
+        $dimension = match (true) {
+            $hasZ && $hasM => CoordinateDimensionEnum::XYZM,
+            $hasZ => CoordinateDimensionEnum::XYZ,
+            $hasM => CoordinateDimensionEnum::XYM,
+            default => CoordinateDimensionEnum::XY,
+        };
         if (!$this->root && $hasSrid) {
             throw new InvalidArgumentException('Nested EWKB SRID metadata is not supported yet.');
         }
         $this->root = false;
         $this->srid = $hasSrid ? $reader->readUnsignedInteger() : $this->srid;
 
-        return new BinaryGeometryHeader($geometryType, CoordinateDimensionEnum::XY, $this->srid);
+        return new BinaryGeometryHeader($geometryType, $dimension, $this->srid);
     }
 }
