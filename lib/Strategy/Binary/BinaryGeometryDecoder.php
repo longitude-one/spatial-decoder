@@ -101,11 +101,12 @@ final class BinaryGeometryDecoder
      * Construct through a local builder with WKT-compatible defaults.
      *
      * @param CoordinateDimensionEnum $dimension declared coordinate layout
+     * @param int                     $srid      spatial reference for this geometry
      */
-    private function createBuilder(CoordinateDimensionEnum $dimension): SpatialBuilder
+    private function createBuilder(CoordinateDimensionEnum $dimension, int $srid): SpatialBuilder
     {
         $mode = SpatialModelEnum::GEOGRAPHY === $this->mode ? SpatialModelEnum::GEOGRAPHY : SpatialModelEnum::GEOMETRY;
-        $builder = SpatialBuilder::create()->family($mode)->dimension($dimension);
+        $builder = SpatialBuilder::create()->family($mode)->dimension($dimension)->srid($srid);
 
         return $this->mutable ? $builder->mutable() : $builder->immutable();
     }
@@ -150,7 +151,7 @@ final class BinaryGeometryDecoder
         $header = $this->dialect->readHeader($reader);
         $dimension = $header->dimension;
         $geometryType = $header->type;
-        $builder = $this->createBuilder($dimension);
+        $builder = $this->createBuilder($dimension, $header->srid);
 
         return match ($geometryType) {
             GeometryTypeEnum::POINT => $this->buildPoint($builder, $dimension, $reader->readCoordinates($dimension)),

@@ -1,6 +1,6 @@
 # Decoding spatial data
 
-Turn WKT or EWKT text, or WKB binary data, into spatial objects. The default output is immutable Geometry.
+Turn WKT or EWKT text, or WKB/EWKB binary data, into spatial objects. The default output is immutable Geometry.
 The text formats describe points, lines, polygons and collections using readable coordinates.
 See [the README](../README.md) for installation.
 
@@ -337,3 +337,36 @@ These implementation classes are internal, not supported public extension
 points. This extraction prepares reuse by a future EWKB strategy; it does not
 enable EWKB flags or SRIDs in WKB. The public constructor,
 output options, accepted geometry families and rejection behavior are unchanged.
+
+## EWKB decoding
+
+Use `EwkbDecoderStrategy` for the initial XY subset of the PostGIS EWKB extension.
+It reuses the WKB geometry bodies and supports an optional root SRID in either byte order.
+The supported XY families are Point, LineString, Polygon, CircularString, Triangle,
+MultiPoint, MultiLineString, MultiPolygon, GeometryCollection and CompoundCurve.
+
+```php
+use LongitudeOne\SpatialDecoder\Decoder;
+use LongitudeOne\SpatialDecoder\Strategy\EwkbDecoderStrategy;
+
+$decoder = new Decoder(new EwkbDecoderStrategy());
+$point = $decoder->decode(hex2bin('0101000020e6100000000000000000f03f00000000000000c0'));
+
+// $point->toArray() === [1.0, -2.0]
+// $point->getSrid() === 4326
+```
+
+An absent SRID and an explicit zero both produce SRID `0`. Explicit values are
+preserved from `0` through `min(4294967295, PHP_INT_MAX)`, without clamping,
+coordinate transformation or axis reordering. Existing `mode` and `mutable`
+options apply; immutable Geometry remains the default.
+
+This delivery accepts XY only. Z/M declarations and explicit SRID fields in nested
+headers are rejected pending their dedicated deliveries. Members without a field
+use the root SRID. PolyhedralSurface requires Z and remains unavailable here.
+See the [EWKB compatibility contract](ewkb-compatibility-v1.md) for the full target contract.
+
+Pass raw bytes, converting hexadecimal or PostgreSQL bytea text explicitly in the
+application. Unsupported declarations, truncated SRIDs, malformed input and
+trailing bytes raise the public decoder `InvalidArgumentException`. Standard
+`WkbDecoderStrategy` continues to reject EWKB flags.
