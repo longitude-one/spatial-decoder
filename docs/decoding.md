@@ -334,13 +334,30 @@ policy. Each decode creates a fresh bounded `WkbReader`;
 failed calls do not leave cursor or construction state in the strategy.
 
 These implementation classes are internal, not supported public extension
-points. This extraction prepares reuse by a future EWKB strategy; it does not
-enable EWKB flags or SRIDs in WKB. The public constructor,
+points. Both binary strategies use this engine with their own header dialect; sharing
+the engine does not enable EWKB flags or SRIDs in WKB. The public constructor,
 output options, accepted geometry families and rejection behavior are unchanged.
 
 ## EWKB decoding
 
-Use `EwkbDecoderStrategy` for the supported subset of the PostGIS EWKB extension.
+Use `EwkbDecoderStrategy` for the supported subset of EWKB, a PostGIS extension
+separate from standard WKB. Select the strategy explicitly;
+no format or transport auto-detection is performed.
+
+| Boundary | `WkbDecoderStrategy` | `EwkbDecoderStrategy` |
+| --- | --- | --- |
+| Format | Supported ISO/SQL-MM WKB subset | Supported PostGIS EWKB subset, also accepting ordinary supported WKB |
+| Embedded SRID | Not supported; output SRID `0` | Optional uint32 SRID after each flagged type word |
+| Dimensions | Base code plus offsets 0/1000/2000/3000 | The same offsets and PostGIS Z/M flags, combined by logical OR |
+| Transport | One geometry in raw bytes | One geometry in raw bytes |
+| Byte order | Little endian (NDR) or big endian (XDR), per header | Little endian (NDR) or big endian (XDR), per header |
+
+Hexadecimal strings, PostgreSQL `bytea` text such as `\x0101...`, and MySQL binary
+wrappers are not raw WKB/EWKB. Convert the database driver's representation in
+the application before decoding; do not strip bytes from an already binary value.
+
+### Decode EWKB bytes
+
 It reuses the WKB geometry bodies and supports optional SRIDs at root and member headers in either byte order.
 Point, LineString, Polygon, CircularString, Triangle, MultiPoint, MultiLineString,
 MultiPolygon, GeometryCollection and CompoundCurve support XY, XYZ, XYM and XYZM.
@@ -351,11 +368,42 @@ use LongitudeOne\SpatialDecoder\Decoder;
 use LongitudeOne\SpatialDecoder\Strategy\EwkbDecoderStrategy;
 
 $decoder = new Decoder(new EwkbDecoderStrategy());
-$point = $decoder->decode(hex2bin('0101000020e6100000000000000000f03f00000000000000c0'));
+$hex = '0101000020e6100000000000000000f03f00000000000000c0';
+$binary = hex2bin($hex); // Convert this known hexadecimal fixture to raw bytes.
+$point = $decoder->decode($binary);
 
 // $point->toArray() === [1.0, -2.0]
 // $point->getSrid() === 4326
 ```
+
+For PostgreSQL hex-format `bytea` text, remove its `\x` prefix before calling
+`hex2bin()` and handle a `false` conversion result in your application. Escape-format
+`bytea` text requires its own driver-aware conversion; it is not hexadecimal.
+
+### Output models and options
+
+All supported types and layouts listed in this section are available as Geometry or Geography,
+mutable or immutable, including EMPTY values. Immutable Geometry is the default.
+To select mutable Geography, reuse the binary value above:
+
+```php
+use LongitudeOne\Core\Enum\SpatialModelEnum;
+
+$decoder = new Decoder(new EwkbDecoderStrategy([
+    'mode' => SpatialModelEnum::GEOGRAPHY,
+    'mutable' => true,
+]));
+$point = $decoder->decode($binary);
+
+// $point->getFamily() === SpatialModelEnum::GEOGRAPHY
+// $point->getSrid() === 4326
+```
+
+The options apply to every member, ring and vertex. Geography does not imply
+reprojection or geometric validation. See [Strategy configuration](strategy-configuration.md)
+for option types and defaults; there is no `srid` option.
+
+### Dimensions, EMPTY and SRID
 
 At the root, an absent SRID and an explicit zero both produce SRID `0`. Explicit values are
 preserved from `0` through `min(4294967295, PHP_INT_MAX)`, without clamping,
@@ -388,10 +436,41 @@ without an SRID field still inherits 4326. The `mode` and `mutable` options appl
 throughout the graph, including generated rings and vertices.
 See the [EWKB compatibility contract](ewkb-compatibility-v1.md) for the complete contract.
 
-Pass raw bytes, converting hexadecimal or PostgreSQL bytea text explicitly in the
-application. Unsupported declarations, truncated SRIDs, malformed input and
-trailing bytes raise the public decoder `InvalidArgumentException`. Standard
-`WkbDecoderStrategy` continues to reject EWKB flags.
+### EWKB failures and compatibility limits
+
+EWKB failures raise `LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException`,
+implementing `DecoderExceptionInterface`. Catch the exception type; messages can
+mention WKB because the binary engine is shared. Do not match exact message text.
+
+| Failure category | Examples |
+| --- | --- |
+| Transport or header | Hex/bytea text, MySQL wrappers, empty input, invalid byte-order marker, incomplete header |
+| Unsupported feature | Unknown bits including `0x10000000`, unknown types, CurvePolygon, MultiCurve, MultiSurface, TIN or abstract types |
+| Truncation or count | Incomplete flagged SRID, ordinates or members; counters exceeding the available bytes |
+| Member contract | Wrong Multi* member type, mismatched dimensions, nested CompoundCurve component, non-Polygon surface patch |
+| Coordinate contract | Mixed NaN/numeric ordinates; XY or XYM PolyhedralSurface, including EMPTY |
+| Extra data | Any bytes after the one root geometry |
+
+Failure returns no partial graph and leaves the strategy reusable. Unsupported
+binary families use `InvalidArgumentException`, rather than the text strategies'
+`NotYetImplementedException` or `NonInstantiableGeometryTypeException`.
+Invalid constructor options raise Symfony OptionsResolver exceptions before decoding.
+
+### Extension references
+
+The [PostGIS ST_AsEWKB documentation](https://postgis.net/docs/ST_AsEWKB.html)
+describes EWKB output with SRID and NDR/XDR byte order;
+[ST_GeomFromEWKB](https://postgis.net/docs/ST_GeomFromEWKB.html) identifies EWKB as a
+PostGIS-specific format rather than an OGC standard. Standard WKB dimensional
+identifiers are described in the [WKB section](#wkb-decoding), independently of EWKB flags.
+
+LongitudeOne preserves unsigned SRIDs without PostGIS clamping, scopes inheritance
+to the immediate parent, rejects unsupported bits and uses the common WKB/EWKB
+NaN-to-EMPTY policy. These are project compatibility choices, not standard WKB
+requirements or a promise to accept every PostGIS type. The
+[versioned contract and pinned PostGIS 3.6.1 source references](ewkb-compatibility-v1.md#evidence-and-scope)
+record the evidence and approved differences. Standard `WkbDecoderStrategy`
+continues to reject EWKB flags.
 
 The [offline PostGIS interoperability corpus](https://github.com/longitude-one/spatial-decoder/tree/main/tests/Functional/Postgis/Ewkb)
 records the tested combinations, exact bytes and reproducible generation SQL.
