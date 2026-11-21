@@ -392,3 +392,6 @@ Pass raw bytes, converting hexadecimal or PostgreSQL bytea text explicitly in th
 application. Unsupported declarations, truncated SRIDs, malformed input and
 trailing bytes raise the public decoder `InvalidArgumentException`. Standard
 `WkbDecoderStrategy` continues to reject EWKB flags.
+
+The [offline PostGIS interoperability corpus](https://github.com/longitude-one/spatial-decoder/tree/main/tests/Functional/Postgis/Ewkb)
+records the tested combinations, exact bytes and reproducible generation SQL.

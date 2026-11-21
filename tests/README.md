@@ -23,6 +23,12 @@ Run a specific test class or method, replacing `ExampleTest` with its name:
 composer test -- --filter ExampleTest
 ```
 
+## PostGIS interoperability
+
+The [EWKB corpus](Functional/Postgis/Ewkb/README.md) records exact PostGIS bytes,
+generation SQL, version metadata and complete expected graphs. Its tests run
+offline; optional regeneration against PostGIS is documented separately.
+
 ## Coverage
 
 With PCOV installed, generate coverage reports and check the configured threshold:
