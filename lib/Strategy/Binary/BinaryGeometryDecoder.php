@@ -118,8 +118,9 @@ final class BinaryGeometryDecoder
      * @param SpatialBuilder          $builder   parent construction context
      * @param CoordinateDimensionEnum $dimension declared parent layout
      * @param GeometryTypeEnum        $type      aggregate geometry type
+     * @param int                     $srid      immediate parent's effective spatial reference
      */
-    private function readCollection(WkbReader $reader, SpatialBuilder $builder, CoordinateDimensionEnum $dimension, GeometryTypeEnum $type): SpatialInterface
+    private function readCollection(WkbReader $reader, SpatialBuilder $builder, CoordinateDimensionEnum $dimension, GeometryTypeEnum $type, int $srid): SpatialInterface
     {
         $count = $reader->readCount(5);
         $component = $type->componentType();
@@ -128,7 +129,7 @@ final class BinaryGeometryDecoder
             : (null === $component ? [] : [$component]);
         $members = [];
         for ($index = 0; $index < $count; ++$index) {
-            $member = $this->readGeometry($reader);
+            $member = $this->readGeometry($reader, $srid);
             if ([] !== $expected && !\in_array($member->getType(), $expected, true)) {
                 throw new InvalidArgumentException('Incompatible WKB collection member type.');
             }
@@ -144,11 +145,12 @@ final class BinaryGeometryDecoder
     /**
      * Dispatch root and member headers through the same supported type set.
      *
-     * @param WkbReader $reader current binary cursor
+     * @param WkbReader $reader     current binary cursor
+     * @param int       $parentSrid immediate parent's effective spatial reference, or 0 at the root
      */
-    private function readGeometry(WkbReader $reader): SpatialInterface
+    private function readGeometry(WkbReader $reader, int $parentSrid = 0): SpatialInterface
     {
-        $header = $this->dialect->readHeader($reader);
+        $header = $this->dialect->readHeader($reader, $parentSrid);
         $dimension = $header->dimension;
         $geometryType = $header->type;
         $builder = $this->createBuilder($dimension, $header->srid);
@@ -158,12 +160,12 @@ final class BinaryGeometryDecoder
             GeometryTypeEnum::LINESTRING => $builder->createLineString($this->readPoints($reader, $builder, $dimension)),
             GeometryTypeEnum::POLYGON,
             GeometryTypeEnum::TRIANGLE => $this->readPolygon($reader, $builder, $dimension, $geometryType),
-            GeometryTypeEnum::POLYHEDRALSURFACE => $this->readPolyhedralSurface($reader, $builder, $dimension),
+            GeometryTypeEnum::POLYHEDRALSURFACE => $this->readPolyhedralSurface($reader, $builder, $dimension, $header->srid),
             GeometryTypeEnum::MULTIPOINT,
             GeometryTypeEnum::MULTILINESTRING,
             GeometryTypeEnum::MULTIPOLYGON,
             GeometryTypeEnum::GEOMETRYCOLLECTION,
-            GeometryTypeEnum::COMPOUNDCURVE => $this->readCollection($reader, $builder, $dimension, $geometryType),
+            GeometryTypeEnum::COMPOUNDCURVE => $this->readCollection($reader, $builder, $dimension, $geometryType, $header->srid),
             GeometryTypeEnum::CIRCULARSTRING => $builder->createCircularString($this->readPoints($reader, $builder, $dimension)),
             default => throw new InvalidArgumentException('Unsupported WKB type identifier.'),
         };
@@ -214,13 +216,14 @@ final class BinaryGeometryDecoder
      * @param WkbReader               $reader    current binary cursor
      * @param SpatialBuilder          $builder   construction context for all patches
      * @param CoordinateDimensionEnum $dimension declared coordinate layout
+     * @param int                     $srid      effective surface spatial reference
      */
-    private function readPolyhedralSurface(WkbReader $reader, SpatialBuilder $builder, CoordinateDimensionEnum $dimension): SpatialInterface
+    private function readPolyhedralSurface(WkbReader $reader, SpatialBuilder $builder, CoordinateDimensionEnum $dimension, int $srid): SpatialInterface
     {
         if (!$dimension->hasZ()) {
             throw new InvalidArgumentException('WKB PolyhedralSurface requires an XYZ or XYZM coordinate dimension.');
         }
 
-        return $this->readCollection($reader, $builder, $dimension, GeometryTypeEnum::POLYHEDRALSURFACE);
+        return $this->readCollection($reader, $builder, $dimension, GeometryTypeEnum::POLYHEDRALSURFACE, $srid);
     }
 }

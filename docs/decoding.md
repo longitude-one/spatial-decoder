@@ -341,7 +341,7 @@ output options, accepted geometry families and rejection behavior are unchanged.
 ## EWKB decoding
 
 Use `EwkbDecoderStrategy` for the supported subset of the PostGIS EWKB extension.
-It reuses the WKB geometry bodies and supports an optional root SRID in either byte order.
+It reuses the WKB geometry bodies and supports optional SRIDs at root and member headers in either byte order.
 Point, LineString, Polygon, CircularString, Triangle, MultiPoint, MultiLineString,
 MultiPolygon, GeometryCollection and CompoundCurve support XY, XYZ, XYM and XYZM.
 PolyhedralSurface supports XYZ and XYZM only, including EMPTY.
@@ -357,7 +357,7 @@ $point = $decoder->decode(hex2bin('0101000020e6100000000000000000f03f00000000000
 // $point->getSrid() === 4326
 ```
 
-An absent SRID and an explicit zero both produce SRID `0`. Explicit values are
+At the root, an absent SRID and an explicit zero both produce SRID `0`. Explicit values are
 preserved from `0` through `min(4294967295, PHP_INT_MAX)`, without clamping,
 coordinate transformation or axis reordering. Existing `mode` and `mutable`
 options apply; immutable Geometry remains the default.
@@ -374,9 +374,19 @@ mixed NaN/numeric tuples are rejected. Zero point, ring, member or patch counts
 retain the declared EMPTY geometry type and layout. Members must declare the
 parent layout, including EMPTY members, whose positions are preserved.
 
-Explicit SRID fields in nested headers remain rejected pending the dedicated graph
-delivery. Members without a field use the root SRID.
-See the [EWKB compatibility contract](ewkb-compatibility-v1.md) for the full target contract.
+Every nested header selects its own byte order. A member without an SRID field
+inherits its immediate parent's effective SRID. An explicit member SRID is
+preserved, even when it differs from its parent's value or is zero. It applies
+to that member's descendants without affecting later siblings. This also holds
+for EMPTY members. Polygon rings and sequence vertices have no separate headers
+and retain their containing geometry's metadata. No SRID consistency validation,
+normalization, reprojection or curve linearization is performed.
+
+For example, under a collection with SRID 4326, a nested collection explicitly
+declaring 3857 and its members without SRID fields retain 3857. A later sibling
+without an SRID field still inherits 4326. The `mode` and `mutable` options apply
+throughout the graph, including generated rings and vertices.
+See the [EWKB compatibility contract](ewkb-compatibility-v1.md) for the complete contract.
 
 Pass raw bytes, converting hexadecimal or PostgreSQL bytea text explicitly in the
 application. Unsupported declarations, truncated SRIDs, malformed input and

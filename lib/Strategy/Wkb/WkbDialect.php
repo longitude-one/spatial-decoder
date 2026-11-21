@@ -29,9 +29,10 @@ final class WkbDialect implements BinaryDialectInterface
     /**
      * Resolve SQL/MM offsets without accepting EWKB flag bits at any depth.
      *
-     * @param WkbReader $reader current bounded byte cursor
+     * @param WkbReader $reader     current bounded byte cursor
+     * @param int       $parentSrid standard WKB context remains zero throughout the graph
      */
-    public function readHeader(WkbReader $reader): BinaryGeometryHeader
+    public function readHeader(WkbReader $reader, int $parentSrid = 0): BinaryGeometryHeader
     {
         $type = $reader->readHeader();
         $dimension = CoordinateDimensionEnum::tryFromWkbCode($type - $type % 1000)
@@ -39,6 +40,6 @@ final class WkbDialect implements BinaryDialectInterface
         $geometryType = GeometryTypeEnum::tryFromWkbCode($type % 1000)
             ?? throw new InvalidArgumentException('Unsupported WKB type identifier.');
 
-        return new BinaryGeometryHeader($geometryType, $dimension);
+        return new BinaryGeometryHeader($geometryType, $dimension, $parentSrid);
     }
 }

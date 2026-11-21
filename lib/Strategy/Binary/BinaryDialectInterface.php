@@ -25,7 +25,8 @@ interface BinaryDialectInterface
     /**
      * Interpret every root/member header using the selected representation.
      *
-     * @param WkbReader $reader current bounded byte cursor
+     * @param WkbReader $reader     current bounded byte cursor
+     * @param int       $parentSrid immediate parent's effective spatial reference, or 0 at the root
      */
-    public function readHeader(WkbReader $reader): BinaryGeometryHeader;
+    public function readHeader(WkbReader $reader, int $parentSrid = 0): BinaryGeometryHeader;
 }
