@@ -6,9 +6,9 @@ The strategy configuration contract is independent of input and execution interf
 The resolver is not retained. Override `configureOptions()` to declare defaults, allowed types, allowed values and normalizers.
 Unknown or invalid options fail at construction with Symfony OptionsResolver exceptions.
 
-## Configure WKT, EWKT and WKB output
+## Configure WKT, EWKT, WKB and EWKB output
 
-All three strategies accept the same options at construction:
+All four strategies accept the same options at construction:
 
 | Option | Default | Accepted values |
 | --- | --- | --- |
@@ -29,9 +29,9 @@ $point = $decoder->decode('SRID=4326;POINT (1 2)');
 
 The choice applies to the complete decoded graph, including collection members, polygon rings and their points.
 Supported coordinates, dimensions, geometry types, EMPTY values and declared spatial references are preserved.
-WKB currently supports only non-empty XY Points; see [WKB decoding](decoding.md#wkb-decoding).
+See [WKB decoding](decoding.md#wkb-decoding) and [EWKB decoding](decoding.md#ewkb-decoding) for supported geometries and layouts.
 Selecting Geography changes the object's family; it does not project coordinates or establish geometric validity.
-WKT, WKB and unprefixed EWKT retain SRID 0. EWKT prefixes still apply to the complete graph.
+WKT, WKB and unprefixed EWKT retain SRID 0. EWKT prefixes still apply to the complete graph. EWKB preserves its optional root SRID.
 Configuration is local to each strategy and never changes the shared spatial factory mode.
 
 Strings such as `'Geography'`, numeric mutable flags and unknown options are rejected at construction.

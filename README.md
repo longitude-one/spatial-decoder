@@ -37,18 +37,19 @@ $point = $decoder->decode('POINT (1 2)');
 
 Read the [official documentation](https://www.longitude-one.fr/spatial-decoder/v1/index.html).
 
-See the [decoding guide](docs/decoding.md) for EWKT, WKB geometries, curves, dimensions and unsupported types.
+See the [decoding guide](docs/decoding.md) for EWKT, EWKB, WKB geometries, curves, dimensions and unsupported types.
 
 ## Input formats
 
 Built-in strategies decode WKT and EWKT, plus XY, XYZ, XYM and XYZM Points, LineStrings
 and Polygons, MultiPoint, MultiLineString, MultiPolygon, CircularString, CompoundCurve, Triangle and nested GeometryCollection
 in raw WKB (both byte orders), including EMPTY geometries. PolyhedralSurface supports XYZ and XYZM only.
-Other WKB geometry types are not yet supported. EWKB and MySQL internal binary are not supported.
+Other WKB geometry types are not yet supported. Initial EWKB support accepts XY geometries with an optional root SRID;
+see [EWKB decoding](docs/decoding.md#ewkb-decoding) for its limits. MySQL internal binary is not supported.
 
 ## Decoding and geometric validation
 
-By default, WKT, EWKT and WKB produce immutable Geometry objects, including collection members,
+By default, WKT, EWKT, WKB and EWKB produce immutable Geometry objects, including collection members,
 independently of the shared factory's mutable/immutable mode.
 See [Strategy configuration](docs/strategy-configuration.md) to select Geography or mutable output.
 

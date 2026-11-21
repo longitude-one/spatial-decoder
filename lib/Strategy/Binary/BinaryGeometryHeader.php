@@ -26,8 +26,9 @@ final readonly class BinaryGeometryHeader
     /**
      * @param GeometryTypeEnum        $type      declared geometry family
      * @param CoordinateDimensionEnum $dimension declared coordinate layout
+     * @param int                     $srid      effective root spatial reference
      */
-    public function __construct(public GeometryTypeEnum $type, public CoordinateDimensionEnum $dimension)
+    public function __construct(public GeometryTypeEnum $type, public CoordinateDimensionEnum $dimension, public int $srid = 0)
     {
     }
 }
