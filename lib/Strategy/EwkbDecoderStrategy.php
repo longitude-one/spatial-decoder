@@ -19,7 +19,7 @@ use LongitudeOne\SpatialDecoder\Strategy\Ewkb\EwkbDialect;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-/** Decode raw dimensioned EWKB geometries with optional root spatial reference metadata. */
+/** Decode raw dimensioned EWKB graphs with spatial reference metadata at every header. */
 final class EwkbDecoderStrategy extends AbstractConfigurableStrategy implements StringDecoderStrategyInterface
 {
     /**

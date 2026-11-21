@@ -21,22 +21,19 @@ use LongitudeOne\SpatialDecoder\Strategy\Binary\BinaryGeometryHeader;
 use LongitudeOne\SpatialDecoder\Strategy\Wkb\WkbReader;
 
 /**
- * EWKB dimensional headers; explicit nested SRID metadata is not yet supported.
+ * EWKB dimensional headers and spatial references scoped to each geometry.
  *
  * @internal
  */
 final class EwkbDialect implements BinaryDialectInterface
 {
-    private bool $root = true;
-
-    private int $srid = 0;
-
     /**
-     * Preserve an unsigned root SRID without interpreting it as a CRS operation.
+     * Preserve explicit SRIDs and inherit only from the immediate parent.
      *
-     * @param WkbReader $reader current bounded byte cursor
+     * @param WkbReader $reader     current bounded byte cursor
+     * @param int       $parentSrid immediate parent's effective spatial reference, or 0 at the root
      */
-    public function readHeader(WkbReader $reader): BinaryGeometryHeader
+    public function readHeader(WkbReader $reader, int $parentSrid = 0): BinaryGeometryHeader
     {
         $word = $reader->readHeader();
         $hasSrid = 0 !== ($word & 0x20000000);
@@ -53,12 +50,8 @@ final class EwkbDialect implements BinaryDialectInterface
             $hasM => CoordinateDimensionEnum::XYM,
             default => CoordinateDimensionEnum::XY,
         };
-        if (!$this->root && $hasSrid) {
-            throw new InvalidArgumentException('Nested EWKB SRID metadata is not supported yet.');
-        }
-        $this->root = false;
-        $this->srid = $hasSrid ? $reader->readUnsignedInteger() : $this->srid;
+        $srid = $hasSrid ? $reader->readUnsignedInteger() : $parentSrid;
 
-        return new BinaryGeometryHeader($geometryType, $dimension, $this->srid);
+        return new BinaryGeometryHeader($geometryType, $dimension, $srid);
     }
 }

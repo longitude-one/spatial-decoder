@@ -38,7 +38,6 @@ final class EwkbDecoderStrategyTest extends TestCase
         }
         yield 'unknown flag' => [pack('H*', '0101000010000000000000f03f00000000000000c0')];
         yield 'trailing byte' => [pack('H*', '0101000020e6100000000000000000f03f00000000000000c000')];
-        yield 'nested SRID deferred' => [pack('H*', '0107000020e610000001000000010100002000000000000000000000f03f00000000000000c0')];
     }
 
     /** @return iterable<string, array{string, int}> */
