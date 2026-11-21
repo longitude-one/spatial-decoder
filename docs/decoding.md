@@ -340,10 +340,11 @@ output options, accepted geometry families and rejection behavior are unchanged.
 
 ## EWKB decoding
 
-Use `EwkbDecoderStrategy` for the initial XY subset of the PostGIS EWKB extension.
+Use `EwkbDecoderStrategy` for the supported subset of the PostGIS EWKB extension.
 It reuses the WKB geometry bodies and supports an optional root SRID in either byte order.
-The supported XY families are Point, LineString, Polygon, CircularString, Triangle,
-MultiPoint, MultiLineString, MultiPolygon, GeometryCollection and CompoundCurve.
+Point, LineString, Polygon, CircularString, Triangle, MultiPoint, MultiLineString,
+MultiPolygon, GeometryCollection and CompoundCurve support XY, XYZ, XYM and XYZM.
+PolyhedralSurface supports XYZ and XYZM only, including EMPTY.
 
 ```php
 use LongitudeOne\SpatialDecoder\Decoder;
@@ -361,9 +362,20 @@ preserved from `0` through `min(4294967295, PHP_INT_MAX)`, without clamping,
 coordinate transformation or axis reordering. Existing `mode` and `mutable`
 options apply; immutable Geometry remains the default.
 
-This delivery accepts XY only. Z/M declarations and explicit SRID fields in nested
-headers are rejected pending their dedicated deliveries. Members without a field
-use the root SRID. PolyhedralSurface requires Z and remains unavailable here.
+The Z (`0x80000000`) and M (`0x40000000`) flags select XYZ, XYM or XYZM.
+SQL/MM offsets 1000, 2000 and 3000 are also accepted. Flag and offset declarations
+are combined using logical OR: Z plus offset 2000 selects XYZM and requires four
+ordinates. Identical declarations are accepted without adding ordinates. The
+header alone determines the layout; payload length never supplies missing dimensions.
+Coordinates retain X, Y, Z, M order, with XYM using X, Y, M.
+
+All-NaN coordinate tuples become EMPTY with their declared dimension and SRID;
+mixed NaN/numeric tuples are rejected. Zero point, ring, member or patch counts
+retain the declared EMPTY geometry type and layout. Members must declare the
+parent layout, including EMPTY members, whose positions are preserved.
+
+Explicit SRID fields in nested headers remain rejected pending the dedicated graph
+delivery. Members without a field use the root SRID.
 See the [EWKB compatibility contract](ewkb-compatibility-v1.md) for the full target contract.
 
 Pass raw bytes, converting hexadecimal or PostgreSQL bytea text explicitly in the

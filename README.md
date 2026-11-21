@@ -44,7 +44,7 @@ See the [decoding guide](docs/decoding.md) for EWKT, EWKB, WKB geometries, curve
 Built-in strategies decode WKT and EWKT, plus XY, XYZ, XYM and XYZM Points, LineStrings
 and Polygons, MultiPoint, MultiLineString, MultiPolygon, CircularString, CompoundCurve, Triangle and nested GeometryCollection
 in raw WKB (both byte orders), including EMPTY geometries. PolyhedralSurface supports XYZ and XYZM only.
-Other WKB geometry types are not yet supported. Initial EWKB support accepts XY geometries with an optional root SRID;
+Other WKB geometry types are not yet supported. EWKB supports the same types and dimensions, with an optional root SRID;
 see [EWKB decoding](docs/decoding.md#ewkb-decoding) for its limits. MySQL internal binary is not supported.
 
 ## Decoding and geometric validation
