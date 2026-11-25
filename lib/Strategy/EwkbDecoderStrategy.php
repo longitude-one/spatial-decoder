@@ -15,6 +15,7 @@ namespace LongitudeOne\SpatialDecoder\Strategy;
 
 use LongitudeOne\SpatialDecoder\Strategy\Binary\BinaryGeometryDecoder;
 use LongitudeOne\SpatialDecoder\Strategy\Ewkb\EwkbDialect;
+use LongitudeOne\SpatialDecoder\Strategy\Wkb\WkbReader;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 
 /** Decode raw dimensioned EWKB graphs with spatial reference metadata at every header. */
@@ -27,6 +28,6 @@ final class EwkbDecoderStrategy extends AbstractSpatialDecoderStrategy implement
      */
     public function decode(string $data): SpatialInterface
     {
-        return new BinaryGeometryDecoder(new EwkbDialect(), $this->mode, $this->mutable)->decode($data);
+        return new BinaryGeometryDecoder(new EwkbDialect(), $this->mode, $this->mutable)->decode(new WkbReader($data));
     }
 }

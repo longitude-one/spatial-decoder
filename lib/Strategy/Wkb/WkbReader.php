@@ -24,6 +24,8 @@ use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
  */
 final class WkbReader
 {
+    private bool $allowEmptyPoints = true;
+
     private ByteOrderEnum $byteOrder;
 
     private int $offset = 0;
@@ -35,6 +37,19 @@ final class WkbReader
      */
     public function __construct(private readonly string $data)
     {
+    }
+
+    /**
+     * Create a cursor that rejects all-NaN tuples, including inline vertices.
+     *
+     * @param string $data MySQL geometry bytes after the SRID prefix
+     */
+    public static function forMysql(string $data): self
+    {
+        $reader = new self($data);
+        $reader->allowEmptyPoints = false;
+
+        return $reader;
     }
 
     /** Reject additional data after the single root geometry. */
@@ -66,11 +81,19 @@ final class WkbReader
             $values[] = $coordinate;
             $nanCount += is_nan($coordinate) ? 1 : 0;
         }
-        if (0 !== $nanCount && \count($values) !== $nanCount) {
+        if (0 === $nanCount) {
+            return $values;
+        }
+
+        if (\count($values) !== $nanCount) {
             throw new InvalidArgumentException('Mixed NaN and non-NaN WKB Point ordinates.');
         }
 
-        return 0 === $nanCount ? $values : [];
+        if (!$this->allowEmptyPoints) {
+            throw new InvalidArgumentException('Empty Point coordinates are unsupported in this binary profile.');
+        }
+
+        return [];
     }
 
     /**
@@ -94,14 +117,20 @@ final class WkbReader
      * Collection counts must be read before descending into members: there are
      * no parent fields after the members, so the next header selects the order
      * for the next geometry without restoring its parent's order.
+     *
+     * @param ?ByteOrderEnum $requiredOrder byte order required by the dialect
      */
-    public function readHeader(): int
+    public function readHeader(?ByteOrderEnum $requiredOrder = null): int
     {
         if (5 > \strlen($this->data) - $this->offset) {
             throw new InvalidArgumentException('Incomplete WKB header.');
         }
         $this->byteOrder = ByteOrderEnum::tryFrom(\ord($this->readBytes(1)))
             ?? throw new InvalidArgumentException('Invalid WKB byte-order marker.');
+
+        if (null !== $requiredOrder && $requiredOrder !== $this->byteOrder) {
+            throw new InvalidArgumentException('Unexpected geometry byte order.');
+        }
 
         return $this->readUnsignedInteger();
     }

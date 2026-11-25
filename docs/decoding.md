@@ -1,6 +1,6 @@
 # Decoding spatial data
 
-Turn WKT or EWKT text, or WKB/EWKB binary data, into spatial objects. The default output is immutable Geometry.
+Turn WKT or EWKT text, or WKB, EWKB and MySQL binary data, into spatial objects. The default output is immutable Geometry.
 The text formats describe points, lines, polygons and collections using readable coordinates.
 See [the README](../README.md) for installation.
 
@@ -474,3 +474,26 @@ continues to reject EWKB flags.
 
 The [offline PostGIS interoperability corpus](https://github.com/longitude-one/spatial-decoder/tree/main/tests/Functional/Postgis/Ewkb)
 records the tested combinations, exact bytes and reproducible generation SQL.
+
+## MySQL spatial columns
+
+Pass the raw binary column value to `MySQLDecoderStrategy`.
+For a query such as `SELECT location FROM places WHERE id = 1`,
+read the column as a binary string.
+
+```php
+use LongitudeOne\SpatialDecoder\Decoder;
+use LongitudeOne\SpatialDecoder\Strategy\MySQLDecoderStrategy;
+
+$geometry = (new Decoder(new MySQLDecoderStrategy()))->decode($row['location']);
+$srid = $geometry->getSrid();
+```
+
+The first four bytes carry the little-endian SRID for the entire geometry.
+The strategy accepts the seven classic XY geometry types in little-endian
+order. Only GeometryCollection may be empty. The usual `mode` and `mutable`
+options apply throughout the result. Both Geometry and Geography preserve X/Y
+order. A zero SRID decodes as zero.
+
+For `SELECT ST_AsBinary(location)`, use `WkbDecoderStrategy`. That SQL
+expression returns WKB without the column's SRID prefix.

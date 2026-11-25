@@ -46,12 +46,12 @@ final class BinaryGeometryDecoder
     /**
      * Decode one complete input using a fresh byte cursor on every call.
      *
-     * @param string $data raw binary geometry
+     * @param WkbReader $reader   cursor for the selected binary profile
+     * @param int       $rootSrid spatial reference of the root geometry
      */
-    public function decode(string $data): SpatialInterface
+    public function decode(WkbReader $reader, int $rootSrid = 0): SpatialInterface
     {
-        $reader = new WkbReader($data);
-        $spatial = $this->readGeometry($reader);
+        $spatial = $this->readGeometry($reader, $rootSrid);
         $reader->finish();
 
         return $spatial;
