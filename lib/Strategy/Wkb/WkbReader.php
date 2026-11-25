@@ -94,14 +94,20 @@ final class WkbReader
      * Collection counts must be read before descending into members: there are
      * no parent fields after the members, so the next header selects the order
      * for the next geometry without restoring its parent's order.
+     *
+     * @param ?ByteOrderEnum $requiredOrder byte order required by the dialect
      */
-    public function readHeader(): int
+    public function readHeader(?ByteOrderEnum $requiredOrder = null): int
     {
         if (5 > \strlen($this->data) - $this->offset) {
             throw new InvalidArgumentException('Incomplete WKB header.');
         }
         $this->byteOrder = ByteOrderEnum::tryFrom(\ord($this->readBytes(1)))
             ?? throw new InvalidArgumentException('Invalid WKB byte-order marker.');
+
+        if (null !== $requiredOrder && $requiredOrder !== $this->byteOrder) {
+            throw new InvalidArgumentException('Unexpected geometry byte order.');
+        }
 
         return $this->readUnsignedInteger();
     }
