@@ -81,15 +81,19 @@ final class WkbReader
             $values[] = $coordinate;
             $nanCount += is_nan($coordinate) ? 1 : 0;
         }
-        if (0 !== $nanCount && \count($values) !== $nanCount) {
+        if (0 === $nanCount) {
+            return $values;
+        }
+
+        if (\count($values) !== $nanCount) {
             throw new InvalidArgumentException('Mixed NaN and non-NaN WKB Point ordinates.');
         }
 
-        if (0 !== $nanCount && !$this->allowEmptyPoints) {
+        if (!$this->allowEmptyPoints) {
             throw new InvalidArgumentException('Empty Point coordinates are unsupported in this binary profile.');
         }
 
-        return 0 === $nanCount ? $values : [];
+        return [];
     }
 
     /**
