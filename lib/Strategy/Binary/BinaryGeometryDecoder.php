@@ -89,11 +89,13 @@ final class BinaryGeometryDecoder
      */
     private function buildPoint(SpatialBuilder $builder, CoordinateDimensionEnum $dimension, array $coordinates): PointInterface
     {
+        $measureIndex = $dimension->mIndex();
+
         return $builder->point(
             $coordinates[0] ?? null,
             $coordinates[1] ?? null,
             $dimension->hasZ() ? ($coordinates[2] ?? null) : null,
-            $dimension->hasM() ? ($coordinates[$dimension->mIndex()] ?? null) : null,
+            null !== $measureIndex ? ($coordinates[$measureIndex] ?? null) : null,
         );
     }
 

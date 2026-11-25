@@ -41,22 +41,6 @@ final readonly class DecodedSpatialBuilder
     }
 
     /**
-     * Transfer resolved options to the typed construction context.
-     *
-     * @param array<string, mixed> $options resolved decoder options
-     */
-    public static function fromOptions(array $options): self
-    {
-        $mode = $options['mode'] ?? null;
-        $mutable = $options['mutable'] ?? null;
-        if (!$mode instanceof SpatialModelEnum || !\is_bool($mutable)) {
-            throw new InvalidArgumentException('Expected a spatial model enum and a boolean mutable flag.');
-        }
-
-        return new self($mode, $mutable);
-    }
-
-    /**
      * Rebuild a decoded graph through the public spatial-types builder.
      *
      * @param SpatialInterface $spatial parsed immutable geometry

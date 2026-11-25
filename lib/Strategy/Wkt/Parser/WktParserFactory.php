@@ -64,6 +64,8 @@ final class WktParserFactory
         $pointFactory = new WktPointFactory();
         $lineStringFactory = new WktLineStringFactory($pointFactory);
         $polygonFactory = new WktPolygonFactory($lineStringFactory);
+        $polygonParser = new PolygonWktParser($cursor, $coordinateReader, $polygonFactory);
+        $multiPolygonParser = new MultiPolygonWktParser($cursor, $coordinateReader, new WktMultiPolygonFactory($polygonFactory), $polygonFactory);
         $registry = new WktGeometryParserRegistry($cursor, $dialect);
 
         $registry->register(Lexer::T_POINT, new PointWktParser($cursor, $coordinateReader, $pointFactory));
@@ -78,10 +80,10 @@ final class WktParserFactory
         );
         $registry->register(Lexer::T_MULTIPOINT, new MultiPointWktParser($cursor, $coordinateReader, new WktMultiPointFactory($pointFactory)));
         $registry->register(Lexer::T_MULTILINESTRING, new MultiLineStringWktParser($cursor, $coordinateReader, new WktMultiLineStringFactory($lineStringFactory)));
-        $registry->register(Lexer::T_POLYGON, new PolygonWktParser($cursor, $coordinateReader, $polygonFactory));
+        $registry->register(Lexer::T_POLYGON, $polygonParser);
         $registry->register(
             Lexer::T_MULTIPOLYGON,
-            new MultiPolygonWktParser($cursor, $coordinateReader, new WktMultiPolygonFactory($polygonFactory), $polygonFactory)
+            $multiPolygonParser
         );
         $registry->register(
             Lexer::T_GEOMETRYCOLLECTION,
@@ -89,10 +91,10 @@ final class WktParserFactory
         );
 
         if (WktDialect::EWKT === $dialect) {
-            $registry->register(Lexer::T_TRIANGLE, new TriangleEwktParser(new PolygonWktParser($cursor, $coordinateReader, $polygonFactory)));
+            $registry->register(Lexer::T_TRIANGLE, new TriangleEwktParser($polygonParser));
             $registry->register(
                 Lexer::T_POLYHEDRALSURFACE,
-                new PolyhedralSurfaceEwktParser(new MultiPolygonWktParser($cursor, $coordinateReader, new WktMultiPolygonFactory($polygonFactory), $polygonFactory))
+                new PolyhedralSurfaceEwktParser($multiPolygonParser)
             );
         }
 

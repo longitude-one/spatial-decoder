@@ -13,27 +13,13 @@ declare(strict_types=1);
 
 namespace LongitudeOne\SpatialDecoder\Strategy;
 
-use LongitudeOne\Core\Enum\SpatialModelEnum;
 use LongitudeOne\SpatialDecoder\Strategy\Binary\BinaryGeometryDecoder;
 use LongitudeOne\SpatialDecoder\Strategy\Wkb\WkbDialect;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /** Decode raw WKB geometries and nested collections with SQL/MM dimensions. */
-final class WkbDecoderStrategy extends AbstractConfigurableStrategy implements StringDecoderStrategyInterface
+final class WkbDecoderStrategy extends AbstractSpatialDecoderStrategy implements StringDecoderStrategyInterface
 {
-    /**
-     * Select the output family and mutability, as for WKT.
-     *
-     * @param OptionsResolver $resolver the local options resolver
-     */
-    public function configureOptions(OptionsResolver $resolver): void
-    {
-        $resolver->setDefaults(['mode' => SpatialModelEnum::GEOMETRY, 'mutable' => false]);
-        $resolver->setAllowedTypes('mode', SpatialModelEnum::class);
-        $resolver->setAllowedTypes('mutable', 'bool');
-    }
-
     /**
      * Decode one complete geometry without retaining per-call state.
      *
@@ -41,8 +27,6 @@ final class WkbDecoderStrategy extends AbstractConfigurableStrategy implements S
      */
     public function decode(string $data): SpatialInterface
     {
-        $mode = SpatialModelEnum::GEOGRAPHY === $this->options['mode'] ? SpatialModelEnum::GEOGRAPHY : SpatialModelEnum::GEOMETRY;
-
-        return new BinaryGeometryDecoder(new WkbDialect(), $mode, (bool) $this->options['mutable'])->decode($data);
+        return new BinaryGeometryDecoder(new WkbDialect(), $this->mode, $this->mutable)->decode($data);
     }
 }
