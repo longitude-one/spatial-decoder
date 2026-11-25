@@ -16,6 +16,7 @@ namespace LongitudeOne\SpatialDecoder\Strategy;
 use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
 use LongitudeOne\SpatialDecoder\Strategy\Binary\BinaryGeometryDecoder;
 use LongitudeOne\SpatialDecoder\Strategy\MySQL\MySQLDialect;
+use LongitudeOne\SpatialDecoder\Strategy\Wkb\WkbReader;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 
 /** Decode raw MySQL spatial column values. */
@@ -36,6 +37,6 @@ final class MySQLDecoderStrategy extends AbstractSpatialDecoderStrategy implemen
             throw new InvalidArgumentException('Invalid MySQL SRID prefix.');
         }
 
-        return new BinaryGeometryDecoder(new MySQLDialect(), $this->mode, $this->mutable)->decode(substr($data, 4), $srid);
+        return new BinaryGeometryDecoder(new MySQLDialect(), $this->mode, $this->mutable)->decode(WkbReader::forMysql(substr($data, 4)), $srid);
     }
 }

@@ -24,6 +24,8 @@ use LongitudeOne\SpatialDecoder\Exception\InvalidArgumentException;
  */
 final class WkbReader
 {
+    private bool $allowEmptyPoints = true;
+
     private ByteOrderEnum $byteOrder;
 
     private int $offset = 0;
@@ -35,6 +37,19 @@ final class WkbReader
      */
     public function __construct(private readonly string $data)
     {
+    }
+
+    /**
+     * Create a cursor that rejects all-NaN tuples, including inline vertices.
+     *
+     * @param string $data MySQL geometry bytes after the SRID prefix
+     */
+    public static function forMysql(string $data): self
+    {
+        $reader = new self($data);
+        $reader->allowEmptyPoints = false;
+
+        return $reader;
     }
 
     /** Reject additional data after the single root geometry. */
@@ -68,6 +83,10 @@ final class WkbReader
         }
         if (0 !== $nanCount && \count($values) !== $nanCount) {
             throw new InvalidArgumentException('Mixed NaN and non-NaN WKB Point ordinates.');
+        }
+
+        if (0 !== $nanCount && !$this->allowEmptyPoints) {
+            throw new InvalidArgumentException('Empty Point coordinates are unsupported in this binary profile.');
         }
 
         return 0 === $nanCount ? $values : [];

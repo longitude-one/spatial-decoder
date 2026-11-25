@@ -42,13 +42,7 @@ final class MySQLDialect implements BinaryDialectInterface
         }
         $geometryType = GeometryTypeEnum::tryFromWkbCode($type)
             ?? throw new InvalidArgumentException('Unsupported MySQL geometry type.');
-        $body = clone $reader;
-        $empty = match ($geometryType) {
-            GeometryTypeEnum::GEOMETRYCOLLECTION => false,
-            GeometryTypeEnum::POINT => [] === $body->readCoordinates(CoordinateDimensionEnum::XY),
-            default => 0 === $body->readUnsignedInteger(),
-        };
-        if ($empty) {
+        if (GeometryTypeEnum::POINT !== $geometryType && GeometryTypeEnum::GEOMETRYCOLLECTION !== $geometryType && 0 === (clone $reader)->readUnsignedInteger()) {
             throw new InvalidArgumentException('Only MySQL GeometryCollection may be empty.');
         }
 

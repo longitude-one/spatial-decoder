@@ -15,6 +15,7 @@ namespace LongitudeOne\SpatialDecoder\Strategy;
 
 use LongitudeOne\SpatialDecoder\Strategy\Binary\BinaryGeometryDecoder;
 use LongitudeOne\SpatialDecoder\Strategy\Wkb\WkbDialect;
+use LongitudeOne\SpatialDecoder\Strategy\Wkb\WkbReader;
 use LongitudeOne\SpatialTypes\Interfaces\SpatialInterface;
 
 /** Decode raw WKB geometries and nested collections with SQL/MM dimensions. */
@@ -27,6 +28,6 @@ final class WkbDecoderStrategy extends AbstractSpatialDecoderStrategy implements
      */
     public function decode(string $data): SpatialInterface
     {
-        return new BinaryGeometryDecoder(new WkbDialect(), $this->mode, $this->mutable)->decode($data);
+        return new BinaryGeometryDecoder(new WkbDialect(), $this->mode, $this->mutable)->decode(new WkbReader($data));
     }
 }

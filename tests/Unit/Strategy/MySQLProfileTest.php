@@ -39,6 +39,8 @@ final class MySQLProfileTest extends TestCase
             'dimension' => pack('CV', 1, 1001),
             'EWKB flag' => pack('CV', 1, 0x20000001),
             'empty point' => pack('CVee', 1, 1, \NAN, \NAN),
+            'empty line vertex' => pack('CVVeeee', 1, 2, 2, \NAN, \NAN, 1, 2),
+            'empty ring vertex' => pack('CVVVeeeeeeee', 1, 3, 1, 4, 0, 0, \NAN, \NAN, 2, 1, 0, 0),
             'truncated point' => substr($point, 0, -1),
             'impossible count' => pack('CVV', 1, 2, 0xFFFFFFFF),
             'wrong member' => pack('CVV', 1, 5, 1).$point,
